@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { addCents, formatPrice, multiplyCents, subtractCents } from "@/lib/money";
+import { addCents, compareAtSavings, formatPrice, multiplyCents, subtractCents } from "@/lib/money";
 
 describe("formatPrice", () => {
   it("formats zero cents as $0.00", () => {
@@ -61,6 +61,30 @@ describe("subtractCents", () => {
 
   it("throws on non-integer cents", () => {
     expect(() => subtractCents(10.5, 1)).toThrow(RangeError);
+  });
+});
+
+describe("compareAtSavings", () => {
+  it("computes the absolute savings in cents", () => {
+    expect(compareAtSavings(2499, 3200).savingsCents).toBe(701);
+  });
+
+  it("computes the savings percentage", () => {
+    expect(compareAtSavings(2499, 3200).savingsPercent).toBe(22);
+  });
+
+  it("rounds the savings percentage down at the half point", () => {
+    expect(compareAtSavings(2500, 4000).savingsPercent).toBe(38);
+  });
+
+  it("throws when the compare-at price does not exceed the price", () => {
+    expect(() => compareAtSavings(2500, 2500)).toThrow(RangeError);
+    expect(() => compareAtSavings(3200, 2499)).toThrow(RangeError);
+  });
+
+  it("throws on non-integer cents", () => {
+    expect(() => compareAtSavings(19.99, 3200)).toThrow(RangeError);
+    expect(() => compareAtSavings(2499, 32.1)).toThrow(RangeError);
   });
 });
 

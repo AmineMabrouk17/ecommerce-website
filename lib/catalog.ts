@@ -133,3 +133,15 @@ export function rankTrending<T extends TrendingProduct>(products: T[]): T[] {
     (a, b) => b.unitsOrdered30d - a.unitsOrdered30d || b.createdAt.localeCompare(a.createdAt),
   );
 }
+
+export function buildTrending<T extends { id: string; createdAt: string }>(
+  products: T[],
+  salesByProduct: ReadonlyMap<string, number> = new Map(),
+): (T & TrendingProduct)[] {
+  return rankTrending(
+    products.map((product) => ({
+      ...product,
+      unitsOrdered30d: salesByProduct.get(product.id) ?? 0,
+    })),
+  );
+}

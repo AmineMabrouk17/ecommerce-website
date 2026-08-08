@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPagination, parseCatalogParams, rankTrending } from "@/lib/catalog";
+import {
+  buildPagination,
+  buildTrending,
+  parseCatalogParams,
+  rankTrending,
+} from "@/lib/catalog";
 
 describe("parseCatalogParams", () => {
   it("returns defaults for empty params", () => {
@@ -166,6 +171,75 @@ describe("rankTrending", () => {
     ];
     const before = products.map((p) => p.id);
     rankTrending(products);
+    expect(products.map((p) => p.id)).toEqual(before);
+  });
+});
+
+describe("buildTrending", () => {
+  const product = (id: string, createdAt: string) => ({
+    id,
+    createdAt,
+    name: `Product ${id}`,
+  });
+
+  it("merges units ordered in the last 30 days and ranks by sales", () => {
+    const products = [
+      product("a", "2026-01-01T00:00:00.000Z"),
+      product("b", "2026-02-01T00:00:00.000Z"),
+      product("c", "2026-03-01T00:00:00.000Z"),
+    ];
+    const sales = new Map([
+      ["c", 7],
+      ["a", 2],
+    ]);
+    const ranked = buildTrending(products, sales);
+    expect(ranked.map((p) => p.id)).toEqual(["c", "a", "b"]);
+    expect(ranked[0].unitsOrdered30d).toBe(7);
+    expect(ranked[1].unitsOrdered30d).toBe(2);
+    expect(ranked[2].unitsOrdered30d).toBe(0);
+  });
+
+  it("ranks products without sales by newest arrival", () => {
+    const products = [
+      product("old", "2026-01-01T00:00:00.000Z"),
+      product("new", "2026-06-01T00:00:00.000Z"),
+    ];
+    expect(buildTrending(products, new Map()).map((p) => p.id)).toEqual([
+      "new",
+      "old",
+    ]);
+  });
+
+  it("breaks sales ties by newest arrival", () => {
+    const products = [
+      product("old", "2026-01-01T00:00:00.000Z"),
+      product("new", "2026-06-01T00:00:00.000Z"),
+    ];
+    const sales = new Map([
+      ["old", 4],
+      ["new", 4],
+    ]);
+    expect(buildTrending(products, sales).map((p) => p.id)).toEqual([
+      "new",
+      "old",
+    ]);
+  });
+
+  it("defaults to newest ordering when no sales map is given", () => {
+    const products = [
+      product("old", "2026-01-01T00:00:00.000Z"),
+      product("new", "2026-06-01T00:00:00.000Z"),
+    ];
+    expect(buildTrending(products).map((p) => p.id)).toEqual(["new", "old"]);
+  });
+
+  it("does not mutate the input array", () => {
+    const products = [
+      product("a", "2026-01-01T00:00:00.000Z"),
+      product("b", "2026-02-01T00:00:00.000Z"),
+    ];
+    const before = products.map((p) => p.id);
+    buildTrending(products, new Map([["a", 9]]));
     expect(products.map((p) => p.id)).toEqual(before);
   });
 });
