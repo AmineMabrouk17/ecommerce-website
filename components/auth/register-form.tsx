@@ -9,7 +9,6 @@ import { useForm } from "react-hook-form";
 
 import { registerSchema, type RegisterInput } from "@/lib/auth";
 import { register as registerAccount } from "@/lib/actions/auth";
-import { siteConfig } from "@/config/site";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
