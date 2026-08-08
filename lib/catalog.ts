@@ -20,6 +20,20 @@ export interface CatalogQuerySpec {
   offset: number;
 }
 
+export interface PaginationArgs {
+  totalCount: number;
+  pageSize: number;
+  page: number;
+}
+
+export interface PaginationInfo {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  offset: number;
+}
+
 export const DEFAULT_PAGE_SIZE = 24;
 export const MAX_PAGE_SIZE = 100;
 
@@ -92,5 +106,19 @@ export function parseCatalogParams(params: Record<string, unknown>): CatalogQuer
     page,
     pageSize,
     offset: (page - 1) * pageSize,
+  };
+}
+
+export function buildPagination({ totalCount, pageSize, page }: PaginationArgs): PaginationInfo {
+  const count = Math.max(totalCount, 0);
+  const size = Math.min(Math.max(pageSize, 1), MAX_PAGE_SIZE);
+  const totalPages = Math.ceil(count / size);
+  const currentPage = Math.min(Math.max(page, 1), Math.max(totalPages, 1));
+  return {
+    page: currentPage,
+    pageSize: size,
+    totalCount: count,
+    totalPages,
+    offset: (currentPage - 1) * size,
   };
 }

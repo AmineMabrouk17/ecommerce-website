@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseCatalogParams } from "@/lib/catalog";
+import { buildPagination, parseCatalogParams } from "@/lib/catalog";
 
 describe("parseCatalogParams", () => {
   it("returns defaults for empty params", () => {
@@ -89,5 +89,39 @@ describe("parseCatalogParams", () => {
       maxPriceCents: 5000,
       inStock: true,
     });
+  });
+});
+
+describe("buildPagination", () => {
+  it("includes page size, total count, total pages, and offset", () => {
+    expect(buildPagination({ totalCount: 250, pageSize: 24, page: 3 })).toEqual({
+      page: 3,
+      pageSize: 24,
+      totalCount: 250,
+      totalPages: 11,
+      offset: 48,
+    });
+  });
+
+  it("yields one page for an empty result", () => {
+    expect(buildPagination({ totalCount: 0, pageSize: 24, page: 1 })).toEqual({
+      page: 1,
+      pageSize: 24,
+      totalCount: 0,
+      totalPages: 0,
+      offset: 0,
+    });
+  });
+
+  it("clamps the page to the last page when it exceeds total pages", () => {
+    const pagination = buildPagination({ totalCount: 10, pageSize: 24, page: 5 });
+    expect(pagination.page).toBe(1);
+    expect(pagination.totalPages).toBe(1);
+  });
+
+  it("clamps the page size to the allowed maximum", () => {
+    const pagination = buildPagination({ totalCount: 500, pageSize: 1000, page: 2 });
+    expect(pagination.pageSize).toBe(100);
+    expect(pagination.totalPages).toBe(5);
   });
 });
