@@ -8,7 +8,7 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
 import { registerSchema, type RegisterInput } from "@/lib/auth";
-import { register } from "@/lib/actions/auth";
+import { register as registerAccount } from "@/lib/actions/auth";
 import { siteConfig } from "@/config/site";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +37,7 @@ export function RegisterForm({ next, authError }: RegisterFormProps) {
     setError(null);
     setMessage(null);
     startTransition(async () => {
-      const result = await register(values, next);
+      const result = await registerAccount(values, next);
       if (result.error) {
         setError(result.error);
         return;
