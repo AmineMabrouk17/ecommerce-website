@@ -122,3 +122,14 @@ export function buildPagination({ totalCount, pageSize, page }: PaginationArgs):
     offset: (currentPage - 1) * size,
   };
 }
+
+export interface TrendingProduct {
+  unitsOrdered30d: number;
+  createdAt: string;
+}
+
+export function rankTrending<T extends TrendingProduct>(products: T[]): T[] {
+  return [...products].sort(
+    (a, b) => b.unitsOrdered30d - a.unitsOrdered30d || b.createdAt.localeCompare(a.createdAt),
+  );
+}

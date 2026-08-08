@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPagination, parseCatalogParams } from "@/lib/catalog";
+import { buildPagination, parseCatalogParams, rankTrending } from "@/lib/catalog";
 
 describe("parseCatalogParams", () => {
   it("returns defaults for empty params", () => {
@@ -123,5 +123,49 @@ describe("buildPagination", () => {
     const pagination = buildPagination({ totalCount: 500, pageSize: 1000, page: 2 });
     expect(pagination.pageSize).toBe(100);
     expect(pagination.totalPages).toBe(5);
+  });
+});
+
+describe("rankTrending", () => {
+  const base = (overrides: Record<string, unknown>) => ({
+    id: "p1",
+    unitsOrdered30d: 0,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    ...overrides,
+  });
+
+  it("ranks by units ordered in the last 30 days", () => {
+    const products = [
+      base({ id: "a", unitsOrdered30d: 3 }),
+      base({ id: "b", unitsOrdered30d: 10 }),
+      base({ id: "c", unitsOrdered30d: 1 }),
+    ];
+    expect(rankTrending(products).map((p) => p.id)).toEqual(["b", "a", "c"]);
+  });
+
+  it("falls back to newest arrival when sales are tied", () => {
+    const products = [
+      base({ id: "old", unitsOrdered30d: 5, createdAt: "2026-01-01T00:00:00.000Z" }),
+      base({ id: "new", unitsOrdered30d: 5, createdAt: "2026-06-01T00:00:00.000Z" }),
+    ];
+    expect(rankTrending(products).map((p) => p.id)).toEqual(["new", "old"]);
+  });
+
+  it("falls back to newest arrival when there is no sales data", () => {
+    const products = [
+      base({ id: "a", unitsOrdered30d: 0, createdAt: "2026-01-01T00:00:00.000Z" }),
+      base({ id: "b", unitsOrdered30d: 0, createdAt: "2026-05-01T00:00:00.000Z" }),
+    ];
+    expect(rankTrending(products).map((p) => p.id)).toEqual(["b", "a"]);
+  });
+
+  it("does not mutate the input array", () => {
+    const products = [
+      base({ id: "a", unitsOrdered30d: 1 }),
+      base({ id: "b", unitsOrdered30d: 2 }),
+    ];
+    const before = products.map((p) => p.id);
+    rankTrending(products);
+    expect(products.map((p) => p.id)).toEqual(before);
   });
 });
