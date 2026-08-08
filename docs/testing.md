@@ -14,6 +14,7 @@ This project follows a single testing seam: framework-free modules own every bus
 | `lib/reviews.ts` | eligibility matrix across order statuses |
 | `lib/seed.ts` | demo catalog dataset and its validation invariants |
 | `lib/route-guard.ts` | redirect decisions for protected routes given auth state |
+| `lib/auth.ts` | auth form schemas and safe redirect-destination resolution |
 
 ## Rules
 
