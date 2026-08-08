@@ -1,21 +1,26 @@
-import { Sparkles } from "lucide-react";
+import type { Metadata } from "next";
 
-import { Button } from "@/components/ui/button";
+import { CategoryGrid } from "@/components/home/category-grid";
+import { HeroBanner } from "@/components/home/hero-banner";
+import { TrendingProducts } from "@/components/home/trending-products";
 import { siteConfig } from "@/config/site";
+import { getCategories, getTrendingProducts } from "@/lib/data-access";
 
-export default function Home() {
+export const metadata: Metadata = {
+  description: `Shop ${siteConfig.name} — apparel, footwear, accessories, home goods, and tech.`,
+};
+
+export default async function Home() {
+  const [categories, trending] = await Promise.all([
+    getCategories(),
+    getTrendingProducts(),
+  ]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
-      <Sparkles className="size-10 text-primary" aria-hidden />
-      <div className="text-center">
-        <h1 className="text-4xl font-bold tracking-tight">
-          {siteConfig.name}
-        </h1>
-        <p className="mt-2 text-muted-foreground">{siteConfig.description}</p>
-      </div>
-      <Button asChild>
-        <a href="/">Shop now</a>
-      </Button>
+    <main>
+      <HeroBanner />
+      <CategoryGrid categories={categories} />
+      <TrendingProducts products={trending} />
     </main>
   );
 }
