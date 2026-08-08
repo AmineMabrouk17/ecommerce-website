@@ -34,3 +34,21 @@ export function multiplyCents(cents: number, factor: number): number {
   }
   return cents * factor;
 }
+
+export function compareAtSavings(
+  priceCents: number,
+  compareAtPriceCents: number,
+): { savingsCents: number; savingsPercent: number } {
+  assertIntegerCents(priceCents, "priceCents");
+  assertIntegerCents(compareAtPriceCents, "compareAtPriceCents");
+  if (compareAtPriceCents <= priceCents) {
+    throw new RangeError(
+      `compare-at price must exceed price, got ${compareAtPriceCents} <= ${priceCents}`,
+    );
+  }
+  const savingsCents = compareAtPriceCents - priceCents;
+  return {
+    savingsCents,
+    savingsPercent: Math.round((savingsCents / compareAtPriceCents) * 100),
+  };
+}
