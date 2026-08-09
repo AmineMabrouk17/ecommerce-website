@@ -8,7 +8,7 @@ if (!globalThis.localStorage || typeof globalThis.localStorage.getItem !== "func
     },
     clear: () => store.clear(),
     getItem: (key: string) => store.get(key) ?? null,
-    key: (index: number) => [...store.keys()][index] ?? null,
+    key: (index: number) => Array.from(store.keys())[index] ?? null,
     removeItem: (key: string) => void store.delete(key),
     setItem: (key: string, value: string) => void store.set(key, String(value)),
   };

@@ -100,6 +100,59 @@ export async function getCategories(): Promise<HomeCategory[]> {
   return (data ?? []) as CategoryRow[];
 }
 
+export interface ProductDetail {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  price: number;
+  compareAtPrice: number | null;
+  stock: number;
+  images: string[];
+  category: { name: string; slug: string } | null;
+  createdAt: string;
+}
+
+interface ProductDetailRow {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  price: number;
+  compare_at_price: number | null;
+  stock: number;
+  images: string[] | null;
+  created_at: string;
+  categories: { name: string; slug: string } | null;
+}
+
+export async function getProductBySlug(slug: string): Promise<ProductDetail | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("id, name, slug, description, price, compare_at_price, stock, images, created_at, categories(name, slug)")
+    .eq("slug", slug)
+    .eq("is_published", true)
+    .maybeSingle();
+  if (error) throw error;
+
+  const row = data as ProductDetailRow | null;
+  if (row === null) return null;
+
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description,
+    price: row.price,
+    compareAtPrice: row.compare_at_price,
+    stock: row.stock,
+    images: row.images ?? [],
+    category: row.categories,
+    createdAt: row.created_at,
+  };
+}
+
 async function fetchLatestPublishedProducts(): Promise<ProductRow[]> {
   const supabase = createClient();
   const { data, error } = await supabase
