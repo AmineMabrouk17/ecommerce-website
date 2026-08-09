@@ -119,6 +119,69 @@ export interface OrderItemInsert {
   product_image: string | null;
 }
 
+export type OrderStatus = "pending" | "paid" | "shipped" | "delivered" | "cancelled";
+
+export type PaymentEventType =
+  | "payment_intent.succeeded"
+  | "payment_intent.payment_failed"
+  | "payment_intent.canceled";
+
+export interface PaymentEvent {
+  type: PaymentEventType;
+}
+
+export interface OrderLine {
+  productId: string;
+  quantity: number;
+}
+
+export interface OrderSnapshot {
+  status: OrderStatus;
+  items: OrderLine[];
+}
+
+export type StockEffect =
+  | { kind: "decrement"; productId: string; quantity: number; guardFailed: boolean }
+  | { kind: "restore"; productId: string; quantity: number };
+
+export interface OrderTransition {
+  status: OrderStatus;
+  effects: StockEffect[];
+  noOp: boolean;
+}
+
+function decrementEffects(
+  order: OrderSnapshot,
+  availableStock: Record<string, number>,
+): StockEffect[] {
+  return order.items.map((item) => ({
+    kind: "decrement" as const,
+    productId: item.productId,
+    quantity: item.quantity,
+    guardFailed: (availableStock[item.productId] ?? Infinity) < item.quantity,
+  }));
+}
+
+export function reducePaymentEvent(
+  order: OrderSnapshot,
+  event: PaymentEvent,
+  availableStock: Record<string, number> = {},
+): OrderTransition {
+  if (order.status !== "pending") {
+    return { status: order.status, effects: [], noOp: true };
+  }
+
+  if (event.type === "payment_intent.succeeded") {
+    return {
+      status: "paid",
+      effects: decrementEffects(order, availableStock),
+      noOp: false,
+    };
+  }
+
+  return { status: order.status, effects: [], noOp: true };
+}
+
 export function toOrderInsert(draft: OrderDraft): OrderInsert {
   return {
     user_id: draft.userId,

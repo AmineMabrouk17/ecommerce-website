@@ -8,10 +8,12 @@ import {
 } from "@/lib/pricing";
 import {
   buildOrderDraft,
+  reducePaymentEvent,
   shippingFormSchema,
   toOrderInsert,
   toOrderItemsInsert,
   type OrderDraftLineInput,
+  type OrderSnapshot,
   type ShippingFormInput,
 } from "@/lib/orders";
 
@@ -262,6 +264,36 @@ describe("order insert mapping", () => {
         product_title: "Halo Wireless Headphones",
         product_image: null,
       },
+    ]);
+  });
+});
+
+describe("reducePaymentEvent", () => {
+  const pendingOrder: OrderSnapshot = {
+    status: "pending",
+    items: [
+      { productId: "p1", quantity: 2 },
+      { productId: "p2", quantity: 1 },
+    ],
+  };
+
+  it("transitions a pending order to paid on payment_intent.succeeded", () => {
+    const transition = reducePaymentEvent(pendingOrder, {
+      type: "payment_intent.succeeded",
+    });
+
+    expect(transition.noOp).toBe(false);
+    expect(transition.status).toBe("paid");
+  });
+
+  it("emits a decrement effect for each order item", () => {
+    const transition = reducePaymentEvent(pendingOrder, {
+      type: "payment_intent.succeeded",
+    });
+
+    expect(transition.effects).toEqual([
+      { kind: "decrement", productId: "p1", quantity: 2, guardFailed: false },
+      { kind: "decrement", productId: "p2", quantity: 1, guardFailed: false },
     ]);
   });
 });
