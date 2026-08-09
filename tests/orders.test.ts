@@ -8,6 +8,7 @@ import {
 } from "@/lib/pricing";
 import {
   buildOrderDraft,
+  parsePaymentEvent,
   reducePaymentEvent,
   reduceRefund,
   shippingFormSchema,
@@ -452,5 +453,63 @@ describe("reduceRefund", () => {
       expect(transition.status).toBe(status);
       expect(transition.effects).toEqual([]);
     }
+  });
+});
+
+describe("parsePaymentEvent", () => {
+  it("dispatches payment_intent.succeeded with its payment intent id", () => {
+    const dispatch = parsePaymentEvent({
+      type: "payment_intent.succeeded",
+      data: { object: { id: "pi_123" } },
+    });
+
+    expect(dispatch).toEqual({
+      paymentIntentId: "pi_123",
+      event: { type: "payment_intent.succeeded" },
+    });
+  });
+
+  it("dispatches payment_intent.payment_failed and canceled with their ids", () => {
+    for (const type of [
+      "payment_intent.payment_failed",
+      "payment_intent.canceled",
+    ] as const) {
+      const dispatch = parsePaymentEvent({
+        type,
+        data: { object: { id: "pi_123" } },
+      });
+
+      expect(dispatch).toEqual({ paymentIntentId: "pi_123", event: { type } });
+    }
+  });
+
+  it("returns null for unhandled event types", () => {
+    for (const type of [
+      "charge.refunded",
+      "checkout.session.completed",
+      "payment_intent.requires_action",
+    ]) {
+      expect(
+        parsePaymentEvent({ type, data: { object: { id: "pi_123" } } }),
+      ).toBeNull();
+    }
+  });
+
+  it("returns null for a non-object payload", () => {
+    expect(parsePaymentEvent(null)).toBeNull();
+    expect(parsePaymentEvent("payment_intent.succeeded")).toBeNull();
+  });
+
+  it("throws when a handled event is missing its payment intent object", () => {
+    expect(() => parsePaymentEvent({ type: "payment_intent.succeeded" })).toThrow();
+  });
+
+  it("throws when a handled event has an empty payment intent id", () => {
+    expect(() =>
+      parsePaymentEvent({
+        type: "payment_intent.succeeded",
+        data: { object: {} },
+      }),
+    ).toThrow("payment intent id");
   });
 });

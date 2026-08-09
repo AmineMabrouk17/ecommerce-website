@@ -130,6 +130,43 @@ export interface PaymentEvent {
   type: PaymentEventType;
 }
 
+const HANDLED_PAYMENT_EVENTS: PaymentEventType[] = [
+  "payment_intent.succeeded",
+  "payment_intent.payment_failed",
+  "payment_intent.canceled",
+];
+
+function isPaymentEventType(type: string): type is PaymentEventType {
+  return (HANDLED_PAYMENT_EVENTS as string[]).includes(type);
+}
+
+export interface PaymentEventDispatch {
+  paymentIntentId: string;
+  event: PaymentEvent;
+}
+
+export function parsePaymentEvent(payload: unknown): PaymentEventDispatch | null {
+  if (typeof payload !== "object" || payload === null) return null;
+
+  const { type, data } = payload as {
+    type?: unknown;
+    data?: { object?: unknown };
+  };
+  if (typeof type !== "string" || !isPaymentEventType(type)) return null;
+
+  const paymentIntent = data?.object;
+  if (typeof paymentIntent !== "object" || paymentIntent === null) {
+    throw new Error(`payment event ${type} is missing its payment intent`);
+  }
+
+  const paymentIntentId = (paymentIntent as { id?: unknown }).id;
+  if (typeof paymentIntentId !== "string" || paymentIntentId.length === 0) {
+    throw new Error(`payment event ${type} is missing a payment intent id`);
+  }
+
+  return { paymentIntentId, event: { type } };
+}
+
 export interface OrderLine {
   productId: string;
   quantity: number;
