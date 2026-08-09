@@ -9,6 +9,7 @@ import {
 import {
   buildOrderDraft,
   reducePaymentEvent,
+  reduceRefund,
   shippingFormSchema,
   toOrderInsert,
   toOrderItemsInsert,
@@ -339,7 +340,9 @@ describe("reducePaymentEvent", () => {
     );
 
     expect(
-      transition.effects.every((effect) => !effect.guardFailed),
+      transition.effects.every(
+        (effect) => effect.kind !== "decrement" || !effect.guardFailed,
+      ),
     ).toBe(true);
   });
 
@@ -409,6 +412,45 @@ describe("reducePaymentEvent", () => {
         expect(transition.status).toBe(status);
         expect(transition.effects).toEqual([]);
       }
+    }
+  });
+});
+
+describe("reduceRefund", () => {
+  const paidOrder: OrderSnapshot = {
+    status: "paid",
+    items: [
+      { productId: "p1", quantity: 2 },
+      { productId: "p2", quantity: 1 },
+    ],
+  };
+
+  it("cancels a paid order and restores stock for each item", () => {
+    const transition = reduceRefund(paidOrder);
+
+    expect(transition.noOp).toBe(false);
+    expect(transition.status).toBe("cancelled");
+    expect(transition.effects).toEqual([
+      { kind: "restore", productId: "p1", quantity: 2 },
+      { kind: "restore", productId: "p2", quantity: 1 },
+    ]);
+  });
+
+  it("is a no-op for a pending order", () => {
+    const transition = reduceRefund({ ...paidOrder, status: "pending" });
+
+    expect(transition.noOp).toBe(true);
+    expect(transition.status).toBe("pending");
+    expect(transition.effects).toEqual([]);
+  });
+
+  it("is a no-op for cancelled, shipped, and delivered orders", () => {
+    for (const status of ["cancelled", "shipped", "delivered"] as const) {
+      const transition = reduceRefund({ ...paidOrder, status });
+
+      expect(transition.noOp).toBe(true);
+      expect(transition.status).toBe(status);
+      expect(transition.effects).toEqual([]);
     }
   });
 });

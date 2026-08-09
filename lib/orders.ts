@@ -182,6 +182,26 @@ export function reducePaymentEvent(
   return { status: "cancelled", effects: [], noOp: false };
 }
 
+function restoreEffects(order: OrderSnapshot): StockEffect[] {
+  return order.items.map((item) => ({
+    kind: "restore" as const,
+    productId: item.productId,
+    quantity: item.quantity,
+  }));
+}
+
+export function reduceRefund(order: OrderSnapshot): OrderTransition {
+  if (order.status !== "paid") {
+    return { status: order.status, effects: [], noOp: true };
+  }
+
+  return {
+    status: "cancelled",
+    effects: restoreEffects(order),
+    noOp: false,
+  };
+}
+
 export function toOrderInsert(draft: OrderDraft): OrderInsert {
   return {
     user_id: draft.userId,
