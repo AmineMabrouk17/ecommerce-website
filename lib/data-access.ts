@@ -1,5 +1,5 @@
 import { buildTrending, type CatalogQuerySpec } from "@/lib/catalog";
-import type { OrderDraftLineInput } from "@/lib/orders";
+import type { OrderDraftLineInput, OrderStatus } from "@/lib/orders";
 import { createClient } from "@/lib/supabase/server";
 
 export const TRENDING_LIMIT = 8;
@@ -320,4 +320,99 @@ export async function resolveCartLines(
   }
 
   return { lines, errors };
+}
+
+export interface AccountProfile {
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+}
+
+export interface AccountOrderItem {
+  id: string;
+  productId: string;
+  quantity: number;
+  unitPrice: number;
+  productTitle: string;
+  productImage: string | null;
+}
+
+export interface AccountOrder {
+  id: string;
+  status: OrderStatus;
+  totalAmount: number;
+  shippingAmount: number;
+  createdAt: string;
+  items: AccountOrderItem[];
+}
+
+export interface AccountData {
+  profile: AccountProfile | null;
+  orders: AccountOrder[];
+}
+
+interface AccountOrderRow {
+  id: string;
+  status: OrderStatus;
+  total_amount: number;
+  shipping_amount: number;
+  created_at: string;
+  order_items: {
+    id: string;
+    product_id: string;
+    quantity: number;
+    unit_price: number;
+    product_title: string;
+    product_image: string | null;
+  }[];
+}
+
+export async function getAccountData(): Promise<AccountData> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { profile: null, orders: [] };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, avatar_url")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const { data: orderRows, error } = await supabase
+    .from("orders")
+    .select(
+      "id, status, total_amount, shipping_amount, created_at, order_items(id, product_id, quantity, unit_price, product_title, product_image)",
+    )
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+
+  const orders = ((orderRows ?? []) as AccountOrderRow[]).map((row) => ({
+    id: row.id,
+    status: row.status,
+    totalAmount: row.total_amount,
+    shippingAmount: row.shipping_amount,
+    createdAt: row.created_at,
+    items: row.order_items.map((item) => ({
+      id: item.id,
+      productId: item.product_id,
+      quantity: item.quantity,
+      unitPrice: item.unit_price,
+      productTitle: item.product_title,
+      productImage: item.product_image,
+    })),
+  }));
+
+  return {
+    profile: {
+      name: profile?.full_name ?? "",
+      email: user.email ?? "",
+      avatarUrl: profile?.avatar_url ?? null,
+    },
+    orders,
+  };
 }
