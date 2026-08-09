@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Providers } from "@/app/providers";
+import { CartDrawer } from "@/components/cart/cart-drawer";
 import { SiteHeader } from "@/components/site/header";
 import { siteConfig } from "@/config/site";
 import "./globals.css";
@@ -37,6 +38,7 @@ export default function RootLayout({
         <Providers>
           <SiteHeader />
           {children}
+          <CartDrawer />
         </Providers>
       </body>
     </html>
