@@ -155,6 +155,60 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail | nu
   };
 }
 
+export interface ProductReview {
+  id: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  authorName: string;
+  verified: boolean;
+}
+
+interface ProductReviewRow {
+  id: string;
+  user_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  profiles: { full_name: string | null } | null;
+}
+
+interface VerifiedUserRow {
+  user_id: string;
+}
+
+export async function getProductReviews(
+  productId: string,
+): Promise<ProductReview[]> {
+  const supabase = createClient();
+
+  const { data: reviewRows, error } = await supabase
+    .from("reviews")
+    .select("id, user_id, rating, comment, created_at, profiles(full_name)")
+    .eq("product_id", productId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+
+  const { data: verifiedRows } = await supabase
+    .from("orders")
+    .select("user_id, order_items!inner(product_id)")
+    .eq("order_items.product_id", productId)
+    .in("status", ["paid", "delivered"]);
+
+  const verifiedUserIds = new Set(
+    ((verifiedRows ?? []) as VerifiedUserRow[]).map((row) => row.user_id),
+  );
+
+  return ((reviewRows ?? []) as unknown as ProductReviewRow[]).map((row) => ({
+    id: row.id,
+    rating: row.rating,
+    comment: row.comment ?? "",
+    createdAt: row.created_at,
+    authorName: row.profiles?.full_name ?? "Customer",
+    verified: verifiedUserIds.has(row.user_id),
+  }));
+}
+
 async function fetchLatestPublishedProducts(): Promise<ProductRow[]> {
   const supabase = createClient();
   const { data, error } = await supabase
