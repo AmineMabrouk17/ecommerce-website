@@ -1,4 +1,5 @@
 import { buildTrending, type CatalogQuerySpec } from "@/lib/catalog";
+import type { OrderDraftLineInput } from "@/lib/orders";
 import { createClient } from "@/lib/supabase/server";
 
 export const TRENDING_LIMIT = 8;
@@ -224,4 +225,99 @@ export async function getTrendingProducts(
       createdAt: product.createdAt,
       unitsOrdered30d: product.unitsOrdered30d,
     }));
+}
+
+export interface CheckoutProfile {
+  name: string;
+  email: string;
+}
+
+export async function getCheckoutProfile(): Promise<CheckoutProfile | null> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  return {
+    name: profile?.full_name ?? "",
+    email: user.email ?? "",
+  };
+}
+
+export interface CheckoutLineError {
+  productId: string;
+  message: string;
+}
+
+export interface ResolvedCheckoutLines {
+  lines: OrderDraftLineInput[];
+  errors: CheckoutLineError[];
+}
+
+interface CheckoutProductRow {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+  images: string[] | null;
+}
+
+export async function resolveCartLines(
+  items: { productId: string; quantity: number }[],
+): Promise<ResolvedCheckoutLines> {
+  if (items.length === 0) {
+    return { lines: [], errors: [] };
+  }
+
+  const ids = items.map((item) => item.productId);
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("id, name, price, stock, images")
+    .in("id", ids)
+    .eq("is_published", true);
+  if (error) throw error;
+
+  const byId = new Map(
+    ((data ?? []) as CheckoutProductRow[]).map((row) => [row.id, row]),
+  );
+
+  const lines: OrderDraftLineInput[] = [];
+  const errors: CheckoutLineError[] = [];
+
+  for (const item of items) {
+    const product = byId.get(item.productId);
+    if (!product) {
+      errors.push({ productId: item.productId, message: "is no longer available" });
+      continue;
+    }
+    if (product.stock <= 0) {
+      errors.push({ productId: item.productId, message: "is out of stock" });
+      continue;
+    }
+    if (item.quantity > product.stock) {
+      errors.push({
+        productId: item.productId,
+        message: `has only ${product.stock} in stock`,
+      });
+      continue;
+    }
+
+    lines.push({
+      productId: product.id,
+      name: product.name,
+      image: product.images?.[0] ?? null,
+      price: product.price,
+      quantity: item.quantity,
+    });
+  }
+
+  return { lines, errors };
 }
