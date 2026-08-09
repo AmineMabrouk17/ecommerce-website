@@ -342,4 +342,73 @@ describe("reducePaymentEvent", () => {
       transition.effects.every((effect) => !effect.guardFailed),
     ).toBe(true);
   });
+
+  it("is a no-op when a paid order replays payment_intent.succeeded", () => {
+    const transition = reducePaymentEvent(
+      { ...pendingOrder, status: "paid" },
+      { type: "payment_intent.succeeded" },
+    );
+
+    expect(transition.noOp).toBe(true);
+    expect(transition.status).toBe("paid");
+    expect(transition.effects).toEqual([]);
+  });
+
+  it("is a no-op for any payment event on a paid order", () => {
+    const events = [
+      { type: "payment_intent.payment_failed" as const },
+      { type: "payment_intent.canceled" as const },
+    ];
+
+    for (const event of events) {
+      const transition = reducePaymentEvent(
+        { ...pendingOrder, status: "paid" },
+        event,
+      );
+
+      expect(transition.noOp).toBe(true);
+      expect(transition.status).toBe("paid");
+      expect(transition.effects).toEqual([]);
+    }
+  });
+
+  it("is a no-op for any payment event on a cancelled order", () => {
+    const events = [
+      { type: "payment_intent.succeeded" as const },
+      { type: "payment_intent.payment_failed" as const },
+      { type: "payment_intent.canceled" as const },
+    ];
+
+    for (const event of events) {
+      const transition = reducePaymentEvent(
+        { ...pendingOrder, status: "cancelled" },
+        event,
+      );
+
+      expect(transition.noOp).toBe(true);
+      expect(transition.status).toBe("cancelled");
+      expect(transition.effects).toEqual([]);
+    }
+  });
+
+  it("is a no-op for any payment event on shipped and delivered orders", () => {
+    const events = [
+      { type: "payment_intent.succeeded" as const },
+      { type: "payment_intent.payment_failed" as const },
+      { type: "payment_intent.canceled" as const },
+    ];
+
+    for (const status of ["shipped", "delivered"] as const) {
+      for (const event of events) {
+        const transition = reducePaymentEvent(
+          { ...pendingOrder, status },
+          event,
+        );
+
+        expect(transition.noOp).toBe(true);
+        expect(transition.status).toBe(status);
+        expect(transition.effects).toEqual([]);
+      }
+    }
+  });
 });
