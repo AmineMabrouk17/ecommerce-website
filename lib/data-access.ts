@@ -170,11 +170,11 @@ interface ProductReviewRow {
   rating: number;
   comment: string | null;
   created_at: string;
-  profiles: { full_name: string | null } | null;
 }
 
-interface VerifiedUserRow {
-  user_id: string;
+interface ProfileNameRow {
+  id: string;
+  full_name: string | null;
 }
 
 export async function getProductReviews(
@@ -184,28 +184,39 @@ export async function getProductReviews(
 
   const { data: reviewRows, error } = await supabase
     .from("reviews")
-    .select("id, user_id, rating, comment, created_at, profiles(full_name)")
+    .select("id, user_id, rating, comment, created_at")
     .eq("product_id", productId)
     .order("created_at", { ascending: false });
   if (error) throw error;
 
-  const { data: verifiedRows } = await supabase
-    .from("orders")
-    .select("user_id, order_items!inner(product_id)")
-    .eq("order_items.product_id", productId)
-    .in("status", ["paid", "delivered"]);
+  const rows = (reviewRows ?? []) as unknown as ProductReviewRow[];
 
-  const verifiedUserIds = new Set(
-    ((verifiedRows ?? []) as VerifiedUserRow[]).map((row) => row.user_id),
+  const userIds = Array.from(new Set(rows.map((row) => row.user_id)));
+  const names = new Map<string, string>();
+  if (userIds.length > 0) {
+    const { data: profileRows } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", userIds);
+    for (const profile of (profileRows ?? []) as ProfileNameRow[]) {
+      names.set(profile.id, profile.full_name ?? "");
+    }
+  }
+
+  const { data: verifiedUserIds } = await supabase.rpc(
+    "verified_review_user_ids",
+    { product_id: productId },
   );
 
-  return ((reviewRows ?? []) as unknown as ProductReviewRow[]).map((row) => ({
+  const verified = new Set((verifiedUserIds ?? []) as string[]);
+
+  return rows.map((row) => ({
     id: row.id,
     rating: row.rating,
     comment: row.comment ?? "",
     createdAt: row.created_at,
-    authorName: row.profiles?.full_name ?? "Customer",
-    verified: verifiedUserIds.has(row.user_id),
+    authorName: names.get(row.user_id) || "Customer",
+    verified: verified.has(row.user_id),
   }));
 }
 
