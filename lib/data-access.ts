@@ -1,4 +1,4 @@
-import { buildTrending } from "@/lib/catalog";
+import { buildTrending, type CatalogQuerySpec } from "@/lib/catalog";
 import { createClient } from "@/lib/supabase/server";
 
 export const TRENDING_LIMIT = 8;
@@ -10,13 +10,16 @@ export interface HomeCategory {
   slug: string;
 }
 
-export interface HomeProduct {
+export interface ProductSummary {
   id: string;
   name: string;
   slug: string;
   price: number;
   compareAtPrice: number | null;
   image: string | null;
+}
+
+export interface HomeProduct extends ProductSummary {
   createdAt: string;
   unitsOrdered30d: number;
 }
@@ -40,6 +43,51 @@ interface ProductRow {
 interface SalesRow {
   product_id: string;
   quantity: number;
+}
+
+export interface CatalogPageResult {
+  products: ProductSummary[];
+  totalCount: number;
+}
+
+interface CatalogRow {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  compare_at_price: number | null;
+  images: string[] | null;
+  total_count: number;
+}
+
+export async function getCatalogPage(
+  spec: CatalogQuerySpec,
+): Promise<CatalogPageResult> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("catalog_products", {
+    search_text: spec.search,
+    category_slug: spec.filters.category,
+    min_price_cents: spec.filters.minPriceCents,
+    max_price_cents: spec.filters.maxPriceCents,
+    in_stock_only: spec.filters.inStock,
+    sort_key: spec.sort,
+    page_num: spec.page,
+    page_size: spec.pageSize,
+  });
+  if (error) throw error;
+
+  const rows = (data ?? []) as CatalogRow[];
+  return {
+    products: rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      price: row.price,
+      compareAtPrice: row.compare_at_price,
+      image: row.images?.[0] ?? null,
+    })),
+    totalCount: rows[0]?.total_count ?? 0,
+  };
 }
 
 export async function getCategories(): Promise<HomeCategory[]> {
