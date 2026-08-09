@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { ProductGallery } from "@/components/product/product-gallery";
 import { ProductPanel } from "@/components/product/product-panel";
+import { ProductReviews } from "@/components/product/product-reviews";
 import { siteConfig } from "@/config/site";
 import { getProductBySlug } from "@/lib/data-access";
 
@@ -65,6 +66,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <ProductPanel product={product} />
         </div>
       </div>
+
+      <ProductReviews productId={product.id} />
     </main>
   );
 }
