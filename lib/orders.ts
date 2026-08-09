@@ -101,3 +101,44 @@ export function buildOrderDraft(
     items,
   };
 }
+
+export interface OrderInsert {
+  user_id: string;
+  status: "pending";
+  total_amount: number;
+  shipping_amount: number;
+  shipping_address: ShippingAddress;
+}
+
+export interface OrderItemInsert {
+  order_id: string;
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  product_title: string;
+  product_image: string | null;
+}
+
+export function toOrderInsert(draft: OrderDraft): OrderInsert {
+  return {
+    user_id: draft.userId,
+    status: draft.status,
+    total_amount: draft.totalAmount,
+    shipping_amount: draft.shippingAmount,
+    shipping_address: draft.shippingAddress,
+  };
+}
+
+export function toOrderItemsInsert(
+  orderId: string,
+  draft: OrderDraft,
+): OrderItemInsert[] {
+  return draft.items.map((item) => ({
+    order_id: orderId,
+    product_id: item.productId,
+    quantity: item.quantity,
+    unit_price: item.unitPrice,
+    product_title: item.productTitle,
+    product_image: item.productImage,
+  }));
+}

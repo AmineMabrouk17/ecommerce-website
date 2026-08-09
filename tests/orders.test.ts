@@ -9,6 +9,8 @@ import {
 import {
   buildOrderDraft,
   shippingFormSchema,
+  toOrderInsert,
+  toOrderItemsInsert,
   type OrderDraftLineInput,
   type ShippingFormInput,
 } from "@/lib/orders";
@@ -199,5 +201,67 @@ describe("buildOrderDraft", () => {
     expect(() =>
       buildOrderDraft([line()], { ...shipping, email: "not-an-email" }, "user-1"),
     ).toThrow();
+  });
+});
+
+describe("order insert mapping", () => {
+  const shipping: ShippingFormInput = validForm;
+
+  const draft = buildOrderDraft(
+    [
+      {
+        productId: "p1",
+        name: "Lumina Everyday Tee",
+        image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80",
+        price: 2499,
+        quantity: 2,
+      },
+      {
+        productId: "p2",
+        name: "Halo Wireless Headphones",
+        image: null,
+        price: 14900,
+        quantity: 1,
+      },
+    ],
+    shipping,
+    "user-1",
+  );
+
+  it("maps the draft to the orders insert shape", () => {
+    expect(toOrderInsert(draft)).toEqual({
+      user_id: "user-1",
+      status: "pending",
+      total_amount: draft.totalAmount,
+      shipping_amount: draft.shippingAmount,
+      shipping_address: draft.shippingAddress,
+    });
+  });
+
+  it("does not leak subtotal or items into the orders insert", () => {
+    const insert = toOrderInsert(draft) as Record<string, unknown>;
+    expect(insert).not.toHaveProperty("subtotal");
+    expect(insert).not.toHaveProperty("items");
+  });
+
+  it("maps each order item to the order_items insert shape", () => {
+    expect(toOrderItemsInsert("order-1", draft)).toEqual([
+      {
+        order_id: "order-1",
+        product_id: "p1",
+        quantity: 2,
+        unit_price: 2499,
+        product_title: "Lumina Everyday Tee",
+        product_image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80",
+      },
+      {
+        order_id: "order-1",
+        product_id: "p2",
+        quantity: 1,
+        unit_price: 14900,
+        product_title: "Halo Wireless Headphones",
+        product_image: null,
+      },
+    ]);
   });
 });
