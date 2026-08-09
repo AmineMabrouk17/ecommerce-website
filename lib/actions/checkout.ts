@@ -17,6 +17,12 @@ export interface CheckoutLineInput {
   quantity: number;
 }
 
+export interface CheckoutLineSummary {
+  name: string;
+  quantity: number;
+  lineTotal: number;
+}
+
 export interface CheckoutInput {
   form: ShippingFormInput;
   lines: CheckoutLineInput[];
@@ -25,6 +31,9 @@ export interface CheckoutInput {
 export interface CheckoutActionResult {
   orderId?: string;
   clientSecret?: string;
+  lines?: CheckoutLineSummary[];
+  subtotal?: number;
+  shippingAmount?: number;
   totalAmount?: number;
   error?: string;
   lineErrors?: CheckoutLineError[];
@@ -105,6 +114,13 @@ export async function createCheckoutPayment(
   return {
     orderId,
     clientSecret: paymentIntent.client_secret,
+    lines: draft.items.map((item) => ({
+      name: item.productTitle,
+      quantity: item.quantity,
+      lineTotal: item.lineTotal,
+    })),
+    subtotal: draft.subtotal,
+    shippingAmount: draft.shippingAmount,
     totalAmount: draft.totalAmount,
   };
 }
