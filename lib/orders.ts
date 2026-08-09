@@ -179,7 +179,7 @@ export function reducePaymentEvent(
     };
   }
 
-  return { status: order.status, effects: [], noOp: true };
+  return { status: "cancelled", effects: [], noOp: false };
 }
 
 export function toOrderInsert(draft: OrderDraft): OrderInsert {

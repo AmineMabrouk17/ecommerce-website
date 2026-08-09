@@ -296,4 +296,24 @@ describe("reducePaymentEvent", () => {
       { kind: "decrement", productId: "p2", quantity: 1, guardFailed: false },
     ]);
   });
+
+  it("cancels a pending order on payment_intent.payment_failed", () => {
+    const transition = reducePaymentEvent(pendingOrder, {
+      type: "payment_intent.payment_failed",
+    });
+
+    expect(transition.noOp).toBe(false);
+    expect(transition.status).toBe("cancelled");
+    expect(transition.effects).toEqual([]);
+  });
+
+  it("cancels a pending order on payment_intent.canceled", () => {
+    const transition = reducePaymentEvent(pendingOrder, {
+      type: "payment_intent.canceled",
+    });
+
+    expect(transition.noOp).toBe(false);
+    expect(transition.status).toBe("cancelled");
+    expect(transition.effects).toEqual([]);
+  });
 });
