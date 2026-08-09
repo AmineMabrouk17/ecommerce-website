@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AccountPage() {
-  const { profile, orders } = await getAccountData();
+  const { profile, orders, reviewedProductIds } = await getAccountData();
   if (!profile) {
     redirect("/login");
   }
@@ -37,7 +37,7 @@ export default async function AccountPage() {
           </CardContent>
         </Card>
 
-        <OrderHistory orders={orders} />
+        <OrderHistory orders={orders} reviewedProductIds={reviewedProductIds} />
       </div>
     </main>
   );
