@@ -316,4 +316,30 @@ describe("reducePaymentEvent", () => {
     expect(transition.status).toBe("cancelled");
     expect(transition.effects).toEqual([]);
   });
+
+  it("flags the stock decrement when available stock is insufficient", () => {
+    const transition = reducePaymentEvent(
+      pendingOrder,
+      { type: "payment_intent.succeeded" },
+      { p1: 1 },
+    );
+
+    expect(transition.status).toBe("paid");
+    expect(transition.effects).toEqual([
+      { kind: "decrement", productId: "p1", quantity: 2, guardFailed: true },
+      { kind: "decrement", productId: "p2", quantity: 1, guardFailed: false },
+    ]);
+  });
+
+  it("does not flag the decrement when available stock meets the quantity", () => {
+    const transition = reducePaymentEvent(
+      pendingOrder,
+      { type: "payment_intent.succeeded" },
+      { p1: 2, p2: 1 },
+    );
+
+    expect(
+      transition.effects.every((effect) => !effect.guardFailed),
+    ).toBe(true);
+  });
 });
