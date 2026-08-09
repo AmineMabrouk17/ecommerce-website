@@ -1,5 +1,6 @@
 import { buildTrending, type CatalogQuerySpec } from "@/lib/catalog";
 import type { OrderDraftLineInput, OrderStatus } from "@/lib/orders";
+import { isReviewableOrderStatus } from "@/lib/reviews";
 import { createClient } from "@/lib/supabase/server";
 
 export const TRENDING_LIMIT = 8;
@@ -152,6 +153,71 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail | nu
     category: row.categories,
     createdAt: row.created_at,
   };
+}
+
+export interface ProductReview {
+  id: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  authorName: string;
+  verified: boolean;
+}
+
+interface ProductReviewRow {
+  id: string;
+  user_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+}
+
+interface ProfileNameRow {
+  id: string;
+  full_name: string | null;
+}
+
+export async function getProductReviews(
+  productId: string,
+): Promise<ProductReview[]> {
+  const supabase = createClient();
+
+  const { data: reviewRows, error } = await supabase
+    .from("reviews")
+    .select("id, user_id, rating, comment, created_at")
+    .eq("product_id", productId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+
+  const rows = (reviewRows ?? []) as unknown as ProductReviewRow[];
+
+  const userIds = Array.from(new Set(rows.map((row) => row.user_id)));
+  const names = new Map<string, string>();
+  if (userIds.length > 0) {
+    const { data: profileRows } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", userIds);
+    for (const profile of (profileRows ?? []) as ProfileNameRow[]) {
+      names.set(profile.id, profile.full_name ?? "");
+    }
+  }
+
+  const { data: verifiedUserIds } = await supabase.rpc(
+    "verified_review_user_ids",
+    { product_id: productId },
+  );
+
+  const verified = new Set((verifiedUserIds ?? []) as string[]);
+
+  return rows.map((row) => ({
+    id: row.id,
+    rating: row.rating,
+    comment: row.comment ?? "",
+    createdAt: row.created_at,
+    authorName: names.get(row.user_id) || "Customer",
+    verified: verified.has(row.user_id),
+  }));
 }
 
 async function fetchLatestPublishedProducts(): Promise<ProductRow[]> {
@@ -335,6 +401,7 @@ export interface AccountOrderItem {
   unitPrice: number;
   productTitle: string;
   productImage: string | null;
+  reviewable: boolean;
 }
 
 export interface AccountOrder {
@@ -349,6 +416,7 @@ export interface AccountOrder {
 export interface AccountData {
   profile: AccountProfile | null;
   orders: AccountOrder[];
+  reviewedProductIds: string[];
 }
 
 interface AccountOrderRow {
@@ -373,7 +441,7 @@ export async function getAccountData(): Promise<AccountData> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return { profile: null, orders: [] };
+    return { profile: null, orders: [], reviewedProductIds: [] };
   }
 
   const { data: profile } = await supabase
@@ -391,6 +459,16 @@ export async function getAccountData(): Promise<AccountData> {
     .order("created_at", { ascending: false });
   if (error) throw error;
 
+  const { data: reviewRows, error: reviewError } = await supabase
+    .from("reviews")
+    .select("product_id")
+    .eq("user_id", user.id);
+  if (reviewError) throw reviewError;
+
+  const reviewedProductIds = ((reviewRows ?? []) as { product_id: string }[]).map(
+    (review) => review.product_id,
+  );
+
   const orders = ((orderRows ?? []) as AccountOrderRow[]).map((row) => ({
     id: row.id,
     status: row.status,
@@ -404,6 +482,7 @@ export async function getAccountData(): Promise<AccountData> {
       unitPrice: item.unit_price,
       productTitle: item.product_title,
       productImage: item.product_image,
+      reviewable: isReviewableOrderStatus(row.status),
     })),
   }));
 
@@ -414,5 +493,6 @@ export async function getAccountData(): Promise<AccountData> {
       avatarUrl: profile?.avatar_url ?? null,
     },
     orders,
+    reviewedProductIds,
   };
 }

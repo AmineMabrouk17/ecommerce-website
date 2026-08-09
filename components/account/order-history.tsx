@@ -1,8 +1,9 @@
-import { PackageOpen } from "lucide-react";
+import { CheckCircle2, PackageOpen } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { OrderStatusBadge } from "@/components/account/order-status-badge";
+import { ReviewDialog } from "@/components/account/review-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,9 +17,10 @@ import { formatPrice, multiplyCents } from "@/lib/money";
 
 interface OrderHistoryProps {
   orders: AccountOrder[];
+  reviewedProductIds: string[];
 }
 
-export function OrderHistory({ orders }: OrderHistoryProps) {
+export function OrderHistory({ orders, reviewedProductIds }: OrderHistoryProps) {
   return (
     <Card>
       <CardHeader>
@@ -89,9 +91,26 @@ export function OrderHistory({ orders }: OrderHistoryProps) {
                           {item.quantity} × {formatPrice(item.unitPrice)}
                         </p>
                       </div>
-                      <p className="font-semibold">
-                        {formatPrice(multiplyCents(item.unitPrice, item.quantity))}
-                      </p>
+                      <div className="flex flex-col items-end gap-1">
+                        <p className="font-semibold">
+                          {formatPrice(
+                            multiplyCents(item.unitPrice, item.quantity),
+                          )}
+                        </p>
+                        {item.reviewable ? (
+                          reviewedProductIds.includes(item.productId) ? (
+                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                              <CheckCircle2 className="size-3.5" aria-hidden />
+                              Review submitted
+                            </span>
+                          ) : (
+                            <ReviewDialog
+                              productId={item.productId}
+                              productTitle={item.productTitle}
+                            />
+                          )
+                        ) : null}
+                      </div>
                     </li>
                   ))}
                 </ul>
