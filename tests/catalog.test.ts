@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildPageNumbers,
   buildPagination,
   buildTrending,
   parseCatalogParams,
   rankTrending,
+  serializeCatalogParams,
+  updateCatalogParams,
 } from "@/lib/catalog";
 
 describe("parseCatalogParams", () => {
@@ -241,5 +244,136 @@ describe("buildTrending", () => {
     const before = products.map((p) => p.id);
     buildTrending(products, new Map([["a", 9]]));
     expect(products.map((p) => p.id)).toEqual(before);
+  });
+});
+
+describe("updateCatalogParams", () => {
+  it("sets a param while preserving the others", () => {
+    const next = updateCatalogParams(
+      new URLSearchParams({ category: "apparel", sort: "price_asc" }),
+      { search: "shoes" },
+    );
+    expect(next.toString()).toBe("category=apparel&sort=price_asc&search=shoes");
+  });
+
+  it("removes a param when the patch value is empty", () => {
+    const next = updateCatalogParams(new URLSearchParams({ search: "shoes" }), {
+      search: "",
+    });
+    expect(next.toString()).toBe("");
+  });
+
+  it("removes a param when the patch value is null", () => {
+    const next = updateCatalogParams(
+      new URLSearchParams({ category: "apparel", in_stock: "true" }),
+      { category: null },
+    );
+    expect(next.toString()).toBe("in_stock=true");
+  });
+
+  it("drops the page param when a non-page param changes", () => {
+    const next = updateCatalogParams(
+      new URLSearchParams({ category: "apparel", page: "3" }),
+      { sort: "price_desc" },
+    );
+    expect(next.toString()).toBe("category=apparel&sort=price_desc");
+  });
+
+  it("keeps the other params when only the page changes", () => {
+    const next = updateCatalogParams(
+      new URLSearchParams({ category: "apparel", page: "2" }),
+      { page: "3" },
+    );
+    expect(next.toString()).toBe("category=apparel&page=3");
+  });
+
+  it("sets the page when no page param exists yet", () => {
+    const next = updateCatalogParams(new URLSearchParams(), { page: "2" });
+    expect(next.toString()).toBe("page=2");
+  });
+
+  it("ignores patch entries whose value is undefined", () => {
+    const next = updateCatalogParams(new URLSearchParams({ category: "tech" }), {
+      search: undefined,
+    });
+    expect(next.toString()).toBe("category=tech");
+  });
+
+  it("does not mutate the input search params", () => {
+    const current = new URLSearchParams({ category: "apparel" });
+    updateCatalogParams(current, { search: "shoes" });
+    expect(current.toString()).toBe("category=apparel");
+  });
+});
+
+describe("serializeCatalogParams", () => {
+  it("omits all defaults", () => {
+    const spec = parseCatalogParams({});
+    expect(serializeCatalogParams(spec).toString()).toBe("");
+  });
+
+  it("includes every non-default value in canonical form", () => {
+    const spec = parseCatalogParams({
+      search: "wireless headphones",
+      category: "tech",
+      min_price: "25",
+      max_price: "49.99",
+      in_stock: "true",
+      sort: "price_asc",
+      page: "3",
+      page_size: "12",
+    });
+    expect(serializeCatalogParams(spec).toString()).toBe(
+      "search=wireless+headphones&category=tech&min_price=25&max_price=49.99&in_stock=true&sort=price_asc&page=3&page_size=12",
+    );
+  });
+
+  it("drops the default sort and page", () => {
+    const spec = parseCatalogParams({ category: "apparel", page: "1" });
+    expect(serializeCatalogParams(spec).toString()).toBe("category=apparel");
+  });
+
+  it("drops the derived relevance sort so the server re-derives it", () => {
+    const spec = parseCatalogParams({ search: "shoes" });
+    expect(spec.sort).toBe("relevance");
+    expect(serializeCatalogParams(spec).toString()).toBe("search=shoes");
+  });
+
+  it("formats integer-cents prices without trailing zeros", () => {
+    const spec = parseCatalogParams({ min_price: "25", max_price: "49.99" });
+    expect(serializeCatalogParams(spec).toString()).toBe(
+      "min_price=25&max_price=49.99",
+    );
+  });
+});
+
+describe("buildPageNumbers", () => {
+  it("returns every page for a small page count", () => {
+    expect(buildPageNumbers(2, 3)).toEqual([1, 2, 3]);
+  });
+
+  it("returns a single page for an empty result", () => {
+    expect(buildPageNumbers(1, 1)).toEqual([1]);
+  });
+
+  it("windows around the current page with ellipses on both sides", () => {
+    expect(buildPageNumbers(6, 12)).toEqual([1, "ellipsis", 4, 5, 6, 7, 8, "ellipsis", 12]);
+  });
+
+  it("shows all pages when the window reaches the first page", () => {
+    expect(buildPageNumbers(1, 8)).toEqual([1, 2, 3, "ellipsis", 8]);
+  });
+
+  it("shows all pages when the window reaches the last page", () => {
+    expect(buildPageNumbers(8, 8)).toEqual([1, "ellipsis", 6, 7, 8]);
+  });
+
+  it("does not insert an ellipsis for a single-page gap", () => {
+    expect(buildPageNumbers(3, 5)).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it("clamps an out-of-range current page to the bounds", () => {
+    expect(buildPageNumbers(0, 5)).toEqual([1, 2, 3, 4, 5]);
+    expect(buildPageNumbers(99, 5)).toEqual([1, 2, 3, 4, 5]);
   });
 });

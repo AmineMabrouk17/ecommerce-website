@@ -123,6 +123,89 @@ export function buildPagination({ totalCount, pageSize, page }: PaginationArgs):
   };
 }
 
+export interface CatalogParamPatch {
+  search?: string | null;
+  category?: string | null;
+  min_price?: string | null;
+  max_price?: string | null;
+  in_stock?: string | null;
+  sort?: string | null;
+  page?: string | null;
+}
+
+export function updateCatalogParams(
+  current: URLSearchParams,
+  patch: CatalogParamPatch,
+): URLSearchParams {
+  const next = new URLSearchParams(current);
+  let touchedNonPage = false;
+  for (const [key, value] of Object.entries(patch)) {
+    if (value === undefined) continue;
+    if (key !== "page") touchedNonPage = true;
+    if (value === null || value === "") next.delete(key);
+    else next.set(key, value);
+  }
+  if (touchedNonPage) next.delete("page");
+  return next;
+}
+
+function centsToDollarString(cents: number): string {
+  const dollars = cents / 100;
+  return Number.isInteger(dollars) ? String(dollars) : dollars.toFixed(2);
+}
+
+export function serializeCatalogParams(spec: CatalogQuerySpec): URLSearchParams {
+  const params = new URLSearchParams();
+  if (spec.search) params.set("search", spec.search);
+  if (spec.filters.category) params.set("category", spec.filters.category);
+  if (spec.filters.minPriceCents !== null) {
+    params.set("min_price", centsToDollarString(spec.filters.minPriceCents));
+  }
+  if (spec.filters.maxPriceCents !== null) {
+    params.set("max_price", centsToDollarString(spec.filters.maxPriceCents));
+  }
+  if (spec.filters.inStock) params.set("in_stock", "true");
+  if (spec.sort !== "newest" && spec.sort !== "relevance") {
+    params.set("sort", spec.sort);
+  }
+  if (spec.page > 1) params.set("page", String(spec.page));
+  if (spec.pageSize !== DEFAULT_PAGE_SIZE) {
+    params.set("page_size", String(spec.pageSize));
+  }
+  return params;
+}
+
+export type CatalogPageNumber = number | "ellipsis";
+
+export function buildPageNumbers(
+  currentPage: number,
+  totalPages: number,
+  spread: number = 2,
+): CatalogPageNumber[] {
+  const total = Math.max(totalPages, 1);
+  const current = Math.min(Math.max(currentPage, 1), total);
+  const windowSize = Math.max(spread * 2 + 1, 1);
+
+  if (total <= windowSize + 2) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const start = Math.max(current - spread, 1);
+  const end = Math.min(current + spread, total);
+  const pages: CatalogPageNumber[] = [];
+
+  if (start > 1) {
+    pages.push(1);
+    if (start > 2) pages.push("ellipsis");
+  }
+  for (let page = start; page <= end; page++) pages.push(page);
+  if (end < total) {
+    if (end < total - 1) pages.push("ellipsis");
+    pages.push(total);
+  }
+  return pages;
+}
+
 export interface TrendingProduct {
   unitsOrdered30d: number;
   createdAt: string;
