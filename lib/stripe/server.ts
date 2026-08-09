@@ -13,3 +13,11 @@ export function getStripe(): Stripe {
   stripe = new Stripe(secretKey, { typescript: true });
   return stripe;
 }
+
+export function getStripeWebhookSecret(): string {
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!secret) {
+    throw new Error("STRIPE_WEBHOOK_SECRET is not configured");
+  }
+  return secret;
+}
