@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -72,9 +73,12 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
       <div className="flex items-center gap-4">
         {avatarUrl ? (
-          <img
+          <Image
             src={avatarUrl}
             alt="Avatar preview"
+            width={64}
+            height={64}
+            unoptimized
             className="size-16 rounded-full border object-cover"
           />
         ) : (

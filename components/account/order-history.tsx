@@ -1,4 +1,5 @@
 import { PackageOpen } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { OrderStatusBadge } from "@/components/account/order-status-badge";
@@ -67,9 +68,12 @@ export function OrderHistory({ orders }: OrderHistoryProps) {
                       className="flex items-center gap-3 py-3 text-sm"
                     >
                       {item.productImage ? (
-                        <img
+                        <Image
                           src={item.productImage}
                           alt=""
+                          width={48}
+                          height={48}
+                          unoptimized
                           className="size-12 rounded-md border object-cover"
                         />
                       ) : (
