@@ -239,7 +239,7 @@ describe("order insert mapping", () => {
   });
 
   it("does not leak subtotal or items into the orders insert", () => {
-    const insert = toOrderInsert(draft) as Record<string, unknown>;
+    const insert = toOrderInsert(draft) as unknown as Record<string, unknown>;
     expect(insert).not.toHaveProperty("subtotal");
     expect(insert).not.toHaveProperty("items");
   });
