@@ -4,13 +4,13 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 
-import type { HomeProduct } from "@/lib/data-access";
+import type { ProductSummary } from "@/lib/data-access";
 import { compareAtSavings, formatPrice } from "@/lib/money";
 
 const MotionLink = motion.create(Link);
 
 interface ProductCardProps {
-  product: HomeProduct;
+  product: ProductSummary;
   index?: number;
 }
 
