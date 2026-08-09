@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import { cartSubtotal } from "./pricing";
+
 export interface CartLine {
   productId: string;
   name: string;
@@ -45,10 +47,7 @@ export function selectCartCount(state: Pick<CartState, "lines">): number {
 }
 
 export function selectCartSubtotal(state: Pick<CartState, "lines">): number {
-  return state.lines.reduce(
-    (total, line) => total + line.price * line.quantity,
-    0,
-  );
+  return cartSubtotal(state.lines);
 }
 
 export const useCartStore = create<CartState>()(
