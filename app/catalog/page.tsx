@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
+import { CatalogControls } from "@/components/catalog/catalog-controls";
 import { EmptyState } from "@/components/catalog/empty-state";
 import { Pagination } from "@/components/catalog/pagination";
 import { ProductGrid } from "@/components/catalog/product-grid";
 import { siteConfig } from "@/config/site";
 import { buildPagination, parseCatalogParams } from "@/lib/catalog";
-import { getCatalogPage } from "@/lib/data-access";
+import { getCatalogPage, getCategories } from "@/lib/data-access";
 
 export const metadata: Metadata = {
   title: "Shop all",
@@ -22,7 +24,10 @@ export default async function CatalogPage({
   searchParams: CatalogSearchParams;
 }) {
   const spec = parseCatalogParams(searchParams);
-  const result = await getCatalogPage(spec);
+  const [categories, result] = await Promise.all([
+    getCategories(),
+    getCatalogPage(spec),
+  ]);
   const pagination = buildPagination({
     totalCount: result.totalCount,
     pageSize: spec.pageSize,
@@ -41,6 +46,10 @@ export default async function CatalogPage({
           {result.totalCount} {result.totalCount === 1 ? "product" : "products"}
         </p>
       </header>
+
+      <Suspense fallback={null}>
+        <CatalogControls categories={categories} />
+      </Suspense>
 
       {result.products.length > 0 ? (
         <>
