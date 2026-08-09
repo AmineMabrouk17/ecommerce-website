@@ -8,10 +8,13 @@ import {
 } from "@/lib/pricing";
 import {
   buildOrderDraft,
+  reducePaymentEvent,
+  reduceRefund,
   shippingFormSchema,
   toOrderInsert,
   toOrderItemsInsert,
   type OrderDraftLineInput,
+  type OrderSnapshot,
   type ShippingFormInput,
 } from "@/lib/orders";
 
@@ -263,5 +266,191 @@ describe("order insert mapping", () => {
         product_image: null,
       },
     ]);
+  });
+});
+
+describe("reducePaymentEvent", () => {
+  const pendingOrder: OrderSnapshot = {
+    status: "pending",
+    items: [
+      { productId: "p1", quantity: 2 },
+      { productId: "p2", quantity: 1 },
+    ],
+  };
+
+  it("transitions a pending order to paid on payment_intent.succeeded", () => {
+    const transition = reducePaymentEvent(pendingOrder, {
+      type: "payment_intent.succeeded",
+    });
+
+    expect(transition.noOp).toBe(false);
+    expect(transition.status).toBe("paid");
+  });
+
+  it("emits a decrement effect for each order item", () => {
+    const transition = reducePaymentEvent(pendingOrder, {
+      type: "payment_intent.succeeded",
+    });
+
+    expect(transition.effects).toEqual([
+      { kind: "decrement", productId: "p1", quantity: 2, guardFailed: false },
+      { kind: "decrement", productId: "p2", quantity: 1, guardFailed: false },
+    ]);
+  });
+
+  it("cancels a pending order on payment_intent.payment_failed", () => {
+    const transition = reducePaymentEvent(pendingOrder, {
+      type: "payment_intent.payment_failed",
+    });
+
+    expect(transition.noOp).toBe(false);
+    expect(transition.status).toBe("cancelled");
+    expect(transition.effects).toEqual([]);
+  });
+
+  it("cancels a pending order on payment_intent.canceled", () => {
+    const transition = reducePaymentEvent(pendingOrder, {
+      type: "payment_intent.canceled",
+    });
+
+    expect(transition.noOp).toBe(false);
+    expect(transition.status).toBe("cancelled");
+    expect(transition.effects).toEqual([]);
+  });
+
+  it("flags the stock decrement when available stock is insufficient", () => {
+    const transition = reducePaymentEvent(
+      pendingOrder,
+      { type: "payment_intent.succeeded" },
+      { p1: 1 },
+    );
+
+    expect(transition.status).toBe("paid");
+    expect(transition.effects).toEqual([
+      { kind: "decrement", productId: "p1", quantity: 2, guardFailed: true },
+      { kind: "decrement", productId: "p2", quantity: 1, guardFailed: false },
+    ]);
+  });
+
+  it("does not flag the decrement when available stock meets the quantity", () => {
+    const transition = reducePaymentEvent(
+      pendingOrder,
+      { type: "payment_intent.succeeded" },
+      { p1: 2, p2: 1 },
+    );
+
+    expect(
+      transition.effects.every(
+        (effect) => effect.kind !== "decrement" || !effect.guardFailed,
+      ),
+    ).toBe(true);
+  });
+
+  it("is a no-op when a paid order replays payment_intent.succeeded", () => {
+    const transition = reducePaymentEvent(
+      { ...pendingOrder, status: "paid" },
+      { type: "payment_intent.succeeded" },
+    );
+
+    expect(transition.noOp).toBe(true);
+    expect(transition.status).toBe("paid");
+    expect(transition.effects).toEqual([]);
+  });
+
+  it("is a no-op for any payment event on a paid order", () => {
+    const events = [
+      { type: "payment_intent.payment_failed" as const },
+      { type: "payment_intent.canceled" as const },
+    ];
+
+    for (const event of events) {
+      const transition = reducePaymentEvent(
+        { ...pendingOrder, status: "paid" },
+        event,
+      );
+
+      expect(transition.noOp).toBe(true);
+      expect(transition.status).toBe("paid");
+      expect(transition.effects).toEqual([]);
+    }
+  });
+
+  it("is a no-op for any payment event on a cancelled order", () => {
+    const events = [
+      { type: "payment_intent.succeeded" as const },
+      { type: "payment_intent.payment_failed" as const },
+      { type: "payment_intent.canceled" as const },
+    ];
+
+    for (const event of events) {
+      const transition = reducePaymentEvent(
+        { ...pendingOrder, status: "cancelled" },
+        event,
+      );
+
+      expect(transition.noOp).toBe(true);
+      expect(transition.status).toBe("cancelled");
+      expect(transition.effects).toEqual([]);
+    }
+  });
+
+  it("is a no-op for any payment event on shipped and delivered orders", () => {
+    const events = [
+      { type: "payment_intent.succeeded" as const },
+      { type: "payment_intent.payment_failed" as const },
+      { type: "payment_intent.canceled" as const },
+    ];
+
+    for (const status of ["shipped", "delivered"] as const) {
+      for (const event of events) {
+        const transition = reducePaymentEvent(
+          { ...pendingOrder, status },
+          event,
+        );
+
+        expect(transition.noOp).toBe(true);
+        expect(transition.status).toBe(status);
+        expect(transition.effects).toEqual([]);
+      }
+    }
+  });
+});
+
+describe("reduceRefund", () => {
+  const paidOrder: OrderSnapshot = {
+    status: "paid",
+    items: [
+      { productId: "p1", quantity: 2 },
+      { productId: "p2", quantity: 1 },
+    ],
+  };
+
+  it("cancels a paid order and restores stock for each item", () => {
+    const transition = reduceRefund(paidOrder);
+
+    expect(transition.noOp).toBe(false);
+    expect(transition.status).toBe("cancelled");
+    expect(transition.effects).toEqual([
+      { kind: "restore", productId: "p1", quantity: 2 },
+      { kind: "restore", productId: "p2", quantity: 1 },
+    ]);
+  });
+
+  it("is a no-op for a pending order", () => {
+    const transition = reduceRefund({ ...paidOrder, status: "pending" });
+
+    expect(transition.noOp).toBe(true);
+    expect(transition.status).toBe("pending");
+    expect(transition.effects).toEqual([]);
+  });
+
+  it("is a no-op for cancelled, shipped, and delivered orders", () => {
+    for (const status of ["cancelled", "shipped", "delivered"] as const) {
+      const transition = reduceRefund({ ...paidOrder, status });
+
+      expect(transition.noOp).toBe(true);
+      expect(transition.status).toBe(status);
+      expect(transition.effects).toEqual([]);
+    }
   });
 });
