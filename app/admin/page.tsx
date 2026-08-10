@@ -1,24 +1,27 @@
 import type { Metadata } from "next";
 
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { KpiCards } from "@/components/admin/kpi-cards";
+import { LowStockTable } from "@/components/admin/low-stock-table";
+import { getAdminDashboard } from "@/lib/data-access";
 
 export const metadata: Metadata = {
   title: "Dashboard",
 };
 
-export default function AdminDashboardPage() {
+export default async function AdminDashboardPage() {
+  const { kpis, lowStockProducts } = await getAdminDashboard();
+
   return (
     <>
       <AdminPageHeader
         title="Dashboard"
         description="Monitor store health and revenue."
       />
-      <Card>
-        <CardContent className="py-16 text-center text-sm text-muted-foreground">
-          Revenue KPIs, order counts, and a low-stock alert list will appear here.
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <KpiCards kpis={kpis} />
+        <LowStockTable products={lowStockProducts} />
+      </div>
     </>
   );
 }
