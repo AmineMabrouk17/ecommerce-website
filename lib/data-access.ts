@@ -7,7 +7,8 @@ import {
   type DailyRevenuePoint,
 } from "@/lib/analytics";
 import { buildTrending, type CatalogQuerySpec } from "@/lib/catalog";
-import type { OrderDraftLineInput, OrderStatus } from "@/lib/orders";
+import type { OrderDraftLineInput, OrderStatus, ShippingAddress } from "@/lib/orders";
+import type { AdminOrdersParams } from "@/lib/orders-admin";
 import type { AdminProductsParams } from "@/lib/products-admin";
 import { isReviewableOrderStatus } from "@/lib/reviews";
 import { createClient } from "@/lib/supabase/server";
@@ -597,6 +598,171 @@ export async function getAdminAccess(): Promise<AdminAccess> {
   return {
     isAuthenticated: true,
     isAdmin: profile?.role === "admin",
+  };
+}
+
+interface ProfileNameRow {
+  id: string;
+  full_name: string | null;
+}
+
+async function fetchProfileNames(userIds: string[]): Promise<Map<string, string>> {
+  const unique = Array.from(new Set(userIds));
+  const names = new Map<string, string>();
+  if (unique.length === 0) return names;
+
+  const supabase = createClient();
+  const { data: profileRows } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .in("id", unique);
+
+  for (const profile of (profileRows ?? []) as ProfileNameRow[]) {
+    names.set(profile.id, profile.full_name ?? "");
+  }
+  return names;
+}
+
+export interface AdminOrderSummary {
+  id: string;
+  status: OrderStatus;
+  totalAmount: number;
+  shippingAmount: number;
+  createdAt: string;
+  customerName: string;
+  itemCount: number;
+  stockGuardFailed: boolean;
+}
+
+export interface AdminOrdersPageResult {
+  orders: AdminOrderSummary[];
+  totalCount: number;
+}
+
+interface AdminOrdersPageRow {
+  id: string;
+  user_id: string;
+  status: OrderStatus;
+  total_amount: number;
+  shipping_amount: number;
+  created_at: string;
+  stock_guard_failed: boolean;
+  order_items: { id: string }[];
+}
+
+export async function getAdminOrdersPage(
+  params: AdminOrdersParams,
+): Promise<AdminOrdersPageResult> {
+  const supabase = createClient();
+  let query = supabase
+    .from("orders")
+    .select(
+      "id, user_id, status, total_amount, shipping_amount, created_at, stock_guard_failed, order_items(id)",
+      { count: "exact" },
+    );
+  if (params.status) {
+    query = query.eq("status", params.status);
+  }
+
+  const { data, error, count } = await query
+    .order("created_at", { ascending: false })
+    .range(params.offset, params.offset + params.pageSize - 1);
+  if (error) throw error;
+
+  const rows = (data ?? []) as AdminOrdersPageRow[];
+  const names = await fetchProfileNames(rows.map((row) => row.user_id));
+
+  return {
+    orders: rows.map((row) => ({
+      id: row.id,
+      status: row.status,
+      totalAmount: row.total_amount,
+      shippingAmount: row.shipping_amount,
+      createdAt: row.created_at,
+      customerName: names.get(row.user_id) || "Customer",
+      itemCount: row.order_items.length,
+      stockGuardFailed: row.stock_guard_failed,
+    })),
+    totalCount: count ?? 0,
+  };
+}
+
+export interface AdminOrderDetailItem {
+  id: string;
+  productId: string;
+  quantity: number;
+  unitPrice: number;
+  productTitle: string;
+  productImage: string | null;
+}
+
+export interface AdminOrderDetail {
+  id: string;
+  status: OrderStatus;
+  totalAmount: number;
+  shippingAmount: number;
+  shippingAddress: ShippingAddress | null;
+  stripePaymentIntentId: string | null;
+  stockGuardFailed: boolean;
+  createdAt: string;
+  customerName: string;
+  items: AdminOrderDetailItem[];
+}
+
+interface AdminOrderDetailRow {
+  id: string;
+  user_id: string;
+  status: OrderStatus;
+  total_amount: number;
+  shipping_amount: number;
+  shipping_address: ShippingAddress | null;
+  stripe_payment_intent_id: string | null;
+  stock_guard_failed: boolean;
+  created_at: string;
+  order_items: {
+    id: string;
+    product_id: string;
+    quantity: number;
+    unit_price: number;
+    product_title: string;
+    product_image: string | null;
+  }[];
+}
+
+export async function getAdminOrder(id: string): Promise<AdminOrderDetail | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("orders")
+    .select(
+      "id, user_id, status, total_amount, shipping_amount, shipping_address, stripe_payment_intent_id, stock_guard_failed, created_at, order_items(id, product_id, quantity, unit_price, product_title, product_image)",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+
+  const row = data as AdminOrderDetailRow | null;
+  if (row === null) return null;
+
+  const names = await fetchProfileNames([row.user_id]);
+
+  return {
+    id: row.id,
+    status: row.status,
+    totalAmount: row.total_amount,
+    shippingAmount: row.shipping_amount,
+    shippingAddress: row.shipping_address,
+    stripePaymentIntentId: row.stripe_payment_intent_id,
+    stockGuardFailed: row.stock_guard_failed,
+    createdAt: row.created_at,
+    customerName: names.get(row.user_id) || "Customer",
+    items: row.order_items.map((item) => ({
+      id: item.id,
+      productId: item.product_id,
+      quantity: item.quantity,
+      unitPrice: item.unit_price,
+      productTitle: item.product_title,
+      productImage: item.product_image,
+    })),
   };
 }
 
