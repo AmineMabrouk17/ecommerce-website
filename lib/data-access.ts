@@ -435,6 +435,32 @@ interface AccountOrderRow {
   }[];
 }
 
+export interface AdminAccess {
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+}
+
+export async function getAdminAccess(): Promise<AdminAccess> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { isAuthenticated: false, isAdmin: false };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  return {
+    isAuthenticated: true,
+    isAdmin: profile?.role === "admin",
+  };
+}
+
 export async function getAccountData(): Promise<AccountData> {
   const supabase = createClient();
   const {
