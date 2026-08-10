@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { ProductFormDialog } from "@/components/admin/product-form-dialog";
 import { ProductsPagination } from "@/components/admin/products-pagination";
 import { ProductsTable } from "@/components/admin/products-table";
 import { ProductsToolbar } from "@/components/admin/products-toolbar";
@@ -38,6 +39,7 @@ export default async function AdminProductsPage({
       <AdminPageHeader
         title="Products"
         description="Search the catalog and manage publishing."
+        action={<ProductFormDialog categories={categories} />}
       />
       <ProductsToolbar
         categories={categories}
@@ -47,7 +49,7 @@ export default async function AdminProductsPage({
       />
       {result.products.length > 0 ? (
         <>
-          <ProductsTable products={result.products} />
+          <ProductsTable products={result.products} categories={categories} />
           <ProductsPagination
             search={params.search}
             category={params.category}

@@ -1,7 +1,8 @@
 import Image from "next/image";
 
+import { ProductFormDialog } from "@/components/admin/product-form-dialog";
 import { ProductToggle } from "@/components/admin/product-toggle";
-import type { AdminProductRow } from "@/lib/data-access";
+import type { AdminProductRow, HomeCategory } from "@/lib/data-access";
 import { formatPrice } from "@/lib/money";
 import {
   productStatus,
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 interface ProductsTableProps {
   products: AdminProductRow[];
+  categories: HomeCategory[];
 }
 
 function StatusBadge({ isPublished }: { isPublished: boolean }) {
@@ -28,7 +30,7 @@ function StatusBadge({ isPublished }: { isPublished: boolean }) {
   );
 }
 
-export function ProductsTable({ products }: ProductsTableProps) {
+export function ProductsTable({ products, categories }: ProductsTableProps) {
   return (
     <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
       <table className="w-full text-sm">
@@ -41,6 +43,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
             <th className="px-4 py-3 font-medium">Status</th>
             <th className="px-4 py-3 text-center font-medium">Published</th>
             <th className="px-4 py-3 text-center font-medium">Featured</th>
+            <th className="px-4 py-3 text-right font-medium">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y">
@@ -101,6 +104,12 @@ export function ProductsTable({ products }: ProductsTableProps) {
                   field="is_featured"
                   checked={product.isFeatured}
                   label={`Toggle featured status for ${product.name}`}
+                />
+              </td>
+              <td className="px-4 py-3 text-right">
+                <ProductFormDialog
+                  categories={categories}
+                  productId={product.id}
                 />
               </td>
             </tr>
