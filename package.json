@@ -29,6 +29,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-hook-form": "^7.85.0",
+    "recharts": "^2.15.4",
     "stripe": "^22.4.0",
     "tailwind-merge": "^3.6.0",
     "tailwindcss-animate": "^1.0.7",
