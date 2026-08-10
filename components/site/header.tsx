@@ -2,6 +2,7 @@
 
 import { ShoppingCart } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { useCartDrawerStore } from "@/lib/cart-drawer";
 import { selectCartCount, useCartStore } from "@/lib/cart";
 
 export function SiteHeader() {
+  const pathname = usePathname();
   const count = useCartStore(selectCartCount);
   const openCart = useCartDrawerStore((state) => state.open);
   const [hydrated, setHydrated] = useState(false);
@@ -17,6 +19,10 @@ export function SiteHeader() {
   useEffect(() => {
     setHydrated(true);
   }, []);
+
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur">
