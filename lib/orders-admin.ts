@@ -3,7 +3,7 @@ import type { OrderLine, OrderStatus } from "./orders";
 export const ADMIN_ORDERS_PAGE_SIZE = 10;
 export const ADMIN_ORDERS_MAX_PAGE_SIZE = 100;
 
-const ADMIN_ORDER_STATUSES: readonly string[] = [
+export const ADMIN_ORDER_STATUSES: readonly OrderStatus[] = [
   "pending",
   "paid",
   "shipped",
@@ -27,7 +27,9 @@ function asStatus(value: unknown): OrderStatus | null {
   const raw = asString(value);
   if (raw === null) return null;
   const trimmed = raw.trim();
-  if (!ADMIN_ORDER_STATUSES.includes(trimmed)) return null;
+  if (!(ADMIN_ORDER_STATUSES as readonly string[]).includes(trimmed)) {
+    return null;
+  }
   return trimmed as OrderStatus;
 }
 
