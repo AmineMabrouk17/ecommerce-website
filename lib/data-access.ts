@@ -8,6 +8,7 @@ import {
 } from "@/lib/analytics";
 import { buildTrending, type CatalogQuerySpec } from "@/lib/catalog";
 import type { OrderDraftLineInput, OrderStatus } from "@/lib/orders";
+import type { AdminProductsParams } from "@/lib/products-admin";
 import { isReviewableOrderStatus } from "@/lib/reviews";
 import { createClient } from "@/lib/supabase/server";
 
@@ -108,6 +109,77 @@ export async function getCategories(): Promise<HomeCategory[]> {
     .order("name", { ascending: true });
   if (error) throw error;
   return (data ?? []) as CategoryRow[];
+}
+
+export interface AdminProductRow {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  stock: number;
+  image: string | null;
+  categoryName: string | null;
+  isPublished: boolean;
+  isFeatured: boolean;
+  createdAt: string;
+}
+
+export interface AdminProductsPageResult {
+  products: AdminProductRow[];
+  totalCount: number;
+}
+
+interface AdminProductRowDb {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  stock: number;
+  images: string[] | null;
+  is_published: boolean;
+  is_featured: boolean;
+  created_at: string;
+  categories: { name: string }[] | null;
+}
+
+export async function getAdminProductsPage(
+  params: AdminProductsParams,
+): Promise<AdminProductsPageResult> {
+  const supabase = createClient();
+  let query = supabase
+    .from("products")
+    .select(
+      "id, name, slug, price, stock, images, is_published, is_featured, created_at, categories(name)",
+      { count: "exact" },
+    );
+
+  if (params.search) {
+    query = query.ilike("name", `%${params.search}%`);
+  }
+  if (params.category) {
+    query = query.eq("categories.slug", params.category);
+  }
+
+  const { data, error, count } = await query
+    .order("created_at", { ascending: false })
+    .range(params.offset, params.offset + params.pageSize - 1);
+  if (error) throw error;
+
+  return {
+    products: ((data ?? []) as AdminProductRowDb[]).map((row) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      price: row.price,
+      stock: row.stock,
+      image: row.images?.[0] ?? null,
+      categoryName: row.categories?.[0]?.name ?? null,
+      isPublished: row.is_published,
+      isFeatured: row.is_featured,
+      createdAt: row.created_at,
+    })),
+    totalCount: count ?? 0,
+  };
 }
 
 export interface ProductDetail {
