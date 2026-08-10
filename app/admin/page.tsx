@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { KpiCards } from "@/components/admin/kpi-cards";
 import { LowStockTable } from "@/components/admin/low-stock-table";
+import { RevenueChart } from "@/components/admin/revenue-chart";
 import { getAdminDashboard } from "@/lib/data-access";
 
 export const metadata: Metadata = {
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminDashboardPage() {
-  const { kpis, lowStockProducts } = await getAdminDashboard();
+  const { kpis, lowStockProducts, dailyRevenue } = await getAdminDashboard();
 
   return (
     <>
@@ -21,6 +22,7 @@ export default async function AdminDashboardPage() {
       <div className="space-y-6">
         <KpiCards kpis={kpis} />
         <LowStockTable products={lowStockProducts} />
+        <RevenueChart data={dailyRevenue} />
       </div>
     </>
   );
