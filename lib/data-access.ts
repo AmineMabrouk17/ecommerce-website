@@ -1,3 +1,11 @@
+import {
+  buildAdminKpis,
+  buildDailyRevenueSeries,
+  filterLowStock,
+  LOW_STOCK_THRESHOLD,
+  type AdminKpis,
+  type DailyRevenuePoint,
+} from "@/lib/analytics";
 import { buildTrending, type CatalogQuerySpec } from "@/lib/catalog";
 import type { OrderDraftLineInput, OrderStatus } from "@/lib/orders";
 import { isReviewableOrderStatus } from "@/lib/reviews";
@@ -458,6 +466,77 @@ export async function getAdminAccess(): Promise<AdminAccess> {
   return {
     isAuthenticated: true,
     isAdmin: profile?.role === "admin",
+  };
+}
+
+export interface LowStockProduct {
+  id: string;
+  name: string;
+  slug: string;
+  stock: number;
+  price: number;
+  image: string | null;
+}
+
+export interface AdminDashboardData {
+  kpis: AdminKpis;
+  lowStockProducts: LowStockProduct[];
+  dailyRevenue: DailyRevenuePoint[];
+}
+
+interface AdminOrderRow {
+  status: OrderStatus;
+  total_amount: number;
+  created_at: string;
+}
+
+interface LowStockProductRow {
+  id: string;
+  name: string;
+  slug: string;
+  stock: number;
+  price: number;
+  images: string[] | null;
+}
+
+export async function getAdminDashboard(): Promise<AdminDashboardData> {
+  const supabase = createClient();
+  const [orderResult, productResult] = await Promise.all([
+    supabase
+      .from("orders")
+      .select("status, total_amount, created_at")
+      .eq("status", "paid"),
+    supabase
+      .from("products")
+      .select("id, name, slug, stock, price, images")
+      .eq("is_published", true)
+      .lt("stock", LOW_STOCK_THRESHOLD),
+  ]);
+  if (orderResult.error) throw orderResult.error;
+  if (productResult.error) throw productResult.error;
+
+  const orders = ((orderResult.data ?? []) as AdminOrderRow[]).map((row) => ({
+    status: row.status,
+    totalAmount: row.total_amount,
+    createdAt: row.created_at,
+  }));
+
+  const now = new Date();
+  const lowStockProducts = filterLowStock(
+    ((productResult.data ?? []) as LowStockProductRow[]).map((row) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      stock: row.stock,
+      price: row.price,
+      image: row.images?.[0] ?? null,
+    })),
+  );
+
+  return {
+    kpis: buildAdminKpis(orders, now),
+    lowStockProducts,
+    dailyRevenue: buildDailyRevenueSeries(orders, now),
   };
 }
 
