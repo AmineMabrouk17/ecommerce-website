@@ -182,6 +182,65 @@ export async function getAdminProductsPage(
   };
 }
 
+export interface AdminProductFormData {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  categoryId: string;
+  priceCents: number;
+  compareAtPriceCents: number | null;
+  stock: number;
+  images: string[];
+  isFeatured: boolean;
+  isPublished: boolean;
+}
+
+interface AdminProductFormRow {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  category_id: string;
+  price: number;
+  compare_at_price: number | null;
+  stock: number;
+  images: string[] | null;
+  is_featured: boolean;
+  is_published: boolean;
+}
+
+export async function getAdminProduct(
+  id: string,
+): Promise<AdminProductFormData | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select(
+      "id, name, slug, description, category_id, price, compare_at_price, stock, images, is_featured, is_published",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+
+  const row = data as AdminProductFormRow | null;
+  if (row === null) return null;
+
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description,
+    categoryId: row.category_id,
+    priceCents: row.price,
+    compareAtPriceCents: row.compare_at_price,
+    stock: row.stock,
+    images: row.images ?? [],
+    isFeatured: row.is_featured,
+    isPublished: row.is_published,
+  };
+}
+
 export interface ProductDetail {
   id: string;
   name: string;
