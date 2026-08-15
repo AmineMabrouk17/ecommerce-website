@@ -1,6 +1,9 @@
 -- Extend catalog_products to return the product's category name and stock so
 -- product cards can show a category eyebrow and a live Add-to-cart button.
--- Replaces the 20260809100000 version.
+-- Replaces the 20260809100000 version. The return type (OUT params) changed,
+-- so Postgres requires a drop before the create.
+
+drop function if exists public.catalog_products(text, text, integer, integer, boolean, text, integer, integer);
 
 create or replace function public.catalog_products(
   search_text text default null,
