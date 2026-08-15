@@ -59,7 +59,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
         <ProductGallery images={product.images} name={product.name} />
         <div className="flex flex-col gap-6">
-          <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+            {product.name}
+          </h1>
           {product.description ? (
             <p className="text-muted-foreground">{product.description}</p>
           ) : null}

@@ -21,7 +21,7 @@ export default async function AccountPage() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Account</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">Account</h1>
         <p className="mt-1 text-muted-foreground">
           Manage your profile and track your orders.
         </p>

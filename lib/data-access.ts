@@ -29,6 +29,8 @@ export interface ProductSummary {
   price: number;
   compareAtPrice: number | null;
   image: string | null;
+  categoryName: string | null;
+  stock: number;
 }
 
 export interface HomeProduct extends ProductSummary {
@@ -50,6 +52,8 @@ interface ProductRow {
   compare_at_price: number | null;
   images: string[] | null;
   created_at: string;
+  categories: { name: string }[] | null;
+  stock: number;
 }
 
 interface SalesRow {
@@ -69,6 +73,8 @@ interface CatalogRow {
   price: number;
   compare_at_price: number | null;
   images: string[] | null;
+  category_name: string | null;
+  stock: number;
   total_count: number;
 }
 
@@ -97,6 +103,8 @@ export async function getCatalogPage(
       price: row.price,
       compareAtPrice: row.compare_at_price,
       image: row.images?.[0] ?? null,
+      categoryName: row.category_name ?? null,
+      stock: row.stock ?? 9999,
     })),
     totalCount: rows[0]?.total_count ?? 0,
   };
@@ -364,7 +372,7 @@ async function fetchLatestPublishedProducts(): Promise<ProductRow[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("products")
-    .select("id, name, slug, price, compare_at_price, images, created_at")
+    .select("id, name, slug, price, compare_at_price, images, created_at, stock, categories(name)")
     .eq("is_published", true)
     .order("created_at", { ascending: false })
     .limit(TRENDING_FETCH_LIMIT);
@@ -397,6 +405,8 @@ interface TrendingSource {
   compare_at_price: number | null;
   image: string | null;
   createdAt: string;
+  categoryName: string | null;
+  stock: number;
 }
 
 function toTrendingSource(product: ProductRow): TrendingSource {
@@ -408,6 +418,8 @@ function toTrendingSource(product: ProductRow): TrendingSource {
     compare_at_price: product.compare_at_price,
     image: product.images?.[0] ?? null,
     createdAt: product.created_at,
+    categoryName: product.categories?.[0]?.name ?? null,
+    stock: product.stock,
   };
 }
 
@@ -428,6 +440,8 @@ export async function getTrendingProducts(
       price: product.price,
       compareAtPrice: product.compare_at_price,
       image: product.image,
+      categoryName: product.categoryName,
+      stock: product.stock,
       createdAt: product.createdAt,
       unitsOrdered30d: product.unitsOrdered30d,
     }));

@@ -42,7 +42,7 @@ export default async function AdminOrderDetailPage({
 
       <header className="mb-8 mt-4">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="font-display text-3xl font-semibold tracking-tight">
             Order {orderReference(order.id)}
           </h1>
           <OrderStatusBadge status={order.status} />

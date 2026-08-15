@@ -14,7 +14,7 @@ export function AuthMessage({ error, message }: AuthMessageProps) {
         "rounded-md border px-3 py-2 text-sm",
         error
           ? "border-destructive/40 bg-destructive/10 text-destructive"
-          : "border-emerald-600/40 bg-emerald-600/10 text-emerald-700",
+          : "border-success/40 bg-success/10 text-success",
       )}
     >
       {error ?? message}
