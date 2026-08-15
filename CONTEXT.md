@@ -2,6 +2,20 @@
 
 A custom-built online store: a Next.js storefront backed by Supabase (Postgres, Auth, Storage) with Stripe payments. Single context — catalog, cart, checkout, and fulfillment are one system.
 
+## Brand
+
+**Brand**:
+The storefront's identity: the name "Lumina", positioned as bright, warm, and luminous.
+_Avoid_: company, label
+
+**Signature color**:
+The coral accent that anchors the brand across the storefront; it carries over into every accent, badge, and call to action.
+_Avoid_: accent (generic), theme color
+
+**Design theme**:
+The storefront's appearance — light or dark — chosen via the header toggle and persisted across sessions.
+_Avoid_: mode, skin
+
 ## Language
 
 **Money**:

@@ -41,7 +41,12 @@ export default async function CatalogPage({
   return (
     <main className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">{heading}</h1>
+        <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+          Catalog
+        </p>
+        <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight">
+          {heading}
+        </h1>
         <p className="mt-1 text-muted-foreground">
           {result.totalCount} {result.totalCount === 1 ? "product" : "products"}
         </p>

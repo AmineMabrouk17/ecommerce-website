@@ -21,7 +21,7 @@ function StatusBadge({ isPublished }: { isPublished: boolean }) {
       className={cn(
         "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
         productStatus(isPublished) === "published"
-          ? "bg-emerald-100 text-emerald-700"
+          ? "bg-success/15 text-success"
           : "bg-muted text-muted-foreground",
       )}
     >

@@ -17,7 +17,7 @@ export async function ProductReviews({ productId }: ProductReviewsProps) {
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2
           id="reviews-heading"
-          className="text-2xl font-bold tracking-tight"
+          className="font-display text-2xl font-semibold tracking-tight"
         >
           Reviews
         </h2>
@@ -60,7 +60,7 @@ export async function ProductReviews({ productId }: ProductReviewsProps) {
                 </time>
               </div>
               {review.verified ? (
-                <p className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-green-700">
+                <p className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-success">
                   <BadgeCheck className="size-4" aria-hidden />
                   Verified Buyer
                 </p>

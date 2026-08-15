@@ -65,8 +65,8 @@ export function ProductPanel({ product }: ProductPanelProps) {
         className={cn(
           "text-sm font-medium",
           outOfStock && "text-destructive",
-          lowStock && "text-amber-600",
-          !outOfStock && !lowStock && "text-green-700",
+          lowStock && "text-warning",
+          !outOfStock && !lowStock && "text-success",
         )}
       >
         {outOfStock

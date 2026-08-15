@@ -18,7 +18,7 @@ export function CheckoutSuccess({ orderId }: CheckoutSuccessProps) {
   return (
     <Card className="mx-auto max-w-lg">
       <CardHeader className="items-center text-center">
-        <CheckCircle2 className="size-10 text-green-600" aria-hidden />
+        <CheckCircle2 className="size-10 text-success" aria-hidden />
         <CardTitle className="text-2xl">Order confirmed</CardTitle>
         <CardDescription>
           Your payment succeeded and your order is being prepared.

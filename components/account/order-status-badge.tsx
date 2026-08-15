@@ -3,11 +3,11 @@ import { orderStatusLabel } from "@/lib/account";
 import type { OrderStatus } from "@/lib/orders";
 
 const ORDER_STATUS_TONES: Record<OrderStatus, string> = {
-  pending: "bg-amber-100 text-amber-800",
-  paid: "bg-blue-100 text-blue-800",
-  shipped: "bg-violet-100 text-violet-800",
-  delivered: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
+  pending: "bg-warning/15 text-warning",
+  paid: "bg-info/15 text-info",
+  shipped: "bg-violet/15 text-violet",
+  delivered: "bg-success/15 text-success",
+  cancelled: "bg-destructive/15 text-destructive",
 };
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {
