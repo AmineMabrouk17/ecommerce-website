@@ -25,9 +25,9 @@ export async function expectSignedIn(
   ).toBeVisible();
 }
 
-export async function addFirstProductToCart(page: Page): Promise<string> {
+export async function openFirstInStockProduct(page: Page): Promise<string> {
   await page.goto("/catalog");
-  const links = page.locator("main a[aria-label]");
+  const links = page.locator('main a[aria-label][href^="/product/"]');
   await links.first().waitFor();
   const count = await links.count();
 
@@ -36,15 +36,22 @@ export async function addFirstProductToCart(page: Page): Promise<string> {
     const productName = (await link.getAttribute("aria-label")) ?? "";
     await link.scrollIntoViewIfNeeded();
     await link.click();
+    await page.waitForURL(/\/product\//);
 
     const addButton = page.getByRole("button", { name: "Add to cart" });
+    await addButton.waitFor();
     if (await addButton.isEnabled()) {
-      await addButton.click();
       return productName;
     }
     await page.goBack();
-    await links.first().waitFor();
+    await page.waitForURL(/\/catalog/);
   }
 
-  throw new Error("No in-stock product found to add to cart");
+  throw new Error("No in-stock product found");
+}
+
+export async function addFirstProductToCart(page: Page): Promise<string> {
+  const productName = await openFirstInStockProduct(page);
+  await page.getByRole("button", { name: "Add to cart" }).click();
+  return productName;
 }
