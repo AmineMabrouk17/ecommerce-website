@@ -39,8 +39,12 @@ async function stripeFrame(page: Page): Promise<Frame> {
   const deadline = Date.now() + 30_000;
   while (Date.now() < deadline) {
     for (const frame of page.frames()) {
-      if (await frame.locator('input[name="number"]').count()) {
-        return frame;
+      try {
+        if (await frame.locator('input[name="number"]').count()) {
+          return frame;
+        }
+      } catch {
+        // Stripe reloads its frames while mounting; ignore teardown races.
       }
     }
     await page.waitForTimeout(250);
@@ -100,6 +104,7 @@ test("test-card payment reaches the order confirmed screen", async ({ page }) =>
 
   try {
     await fillStripeTestCard(page);
+    await expect(page.getByRole("button", { name: "Pay now" })).toBeEnabled();
     await page.getByRole("button", { name: "Pay now" }).click();
     await expect(page.getByText("Order confirmed", { exact: true })).toBeVisible({
       timeout: 60_000,
