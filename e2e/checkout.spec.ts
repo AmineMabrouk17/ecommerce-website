@@ -1,7 +1,7 @@
 import { expect, test, type Frame, type Page } from "@playwright/test";
 
 import { CUSTOMER } from "./helpers/accounts";
-import { signIn } from "./helpers/auth";
+import { addFirstProductToCart, signIn } from "./helpers/auth";
 
 test.describe.configure({ mode: "serial" });
 
@@ -25,36 +25,6 @@ const VALIDATION_MESSAGES = [
   "Postal code is required",
   "Country is required",
 ];
-
-// addFirstProductToCart in helpers/auth.ts queries the add-to-cart button
-// immediately after click(), but the App Router soft navigation to the product
-// page only commits a few hundred ms later, so that query hits the catalog's
-// "Add to cart" buttons and throws a strict-mode violation. This local variant
-// waits for the navigation first.
-async function addInStockProductToCart(page: Page): Promise<string> {
-  await page.goto("/catalog");
-  const links = page.locator("main a[aria-label]");
-  await links.first().waitFor();
-
-  for (let index = 0; index < (await links.count()); index++) {
-    const link = links.nth(index);
-    const productName = (await link.getAttribute("aria-label")) ?? "";
-    await link.scrollIntoViewIfNeeded();
-    await link.click();
-    await page.waitForURL(/\/product\/.+/, { timeout: 30_000 });
-
-    const addButton = page.getByRole("button", { name: "Add to cart" });
-    await expect(addButton).toBeVisible({ timeout: 30_000 });
-    if (await addButton.isEnabled()) {
-      await addButton.click();
-      return productName;
-    }
-    await page.goBack();
-    await page.waitForURL(/\/catalog/, { timeout: 30_000 });
-  }
-
-  throw new Error("No in-stock product found to add to cart");
-}
 
 async function fillShippingForm(page: Page): Promise<void> {
   for (const [label, value] of SHIPPING_FIELDS) {
@@ -90,7 +60,7 @@ async function fillStripeTestCard(page: Page): Promise<void> {
 
 test.beforeEach(async ({ page }) => {
   await signIn(page, CUSTOMER);
-  await addInStockProductToCart(page);
+  await addFirstProductToCart(page);
   await page.goto("/checkout");
   await expect(page.getByLabel("Full name")).toBeVisible();
 });
