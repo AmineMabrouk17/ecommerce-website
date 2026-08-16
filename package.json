@@ -11,6 +11,7 @@
     "test:run": "vitest run",
     "typecheck": "tsc --noEmit",
     "db:seed": "tsx --env-file=.env.local scripts/db-seed.ts",
+    "db:e2e-users": "tsx --env-file=.env.local scripts/create-e2e-users.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
