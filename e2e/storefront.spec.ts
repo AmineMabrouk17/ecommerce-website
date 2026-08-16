@@ -1,42 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { addFirstProductToCart, openFirstInStockProduct } from "./helpers/auth";
+
 async function readProductCount(page: Page): Promise<number> {
   const label = await page.getByText(/^\d+ products?$/).innerText();
   return Number.parseInt(label.split(" ")[0], 10);
-}
-
-// addFirstProductToCart in helpers/auth.ts clicks a product link and checks
-// isEnabled() without waiting for Next.js's SPA transition, so it races with
-// the loading skeleton and throws a strict-mode violation against the stale
-// catalog DOM. These local helpers replicate its data-driven loop with an
-// explicit navigation wait so the product page has settled.
-async function openFirstInStockProduct(page: Page): Promise<string> {
-  await page.goto("/catalog");
-  const links = page.locator('main a[aria-label][href^="/product/"]');
-  await links.first().waitFor();
-  const count = await links.count();
-
-  for (let index = 0; index < count; index++) {
-    const link = links.nth(index);
-    const productName = (await link.getAttribute("aria-label")) ?? "";
-    await link.click();
-    await page.waitForURL(/\/product\//);
-    const addButton = page.getByRole("button", { name: "Add to cart" });
-    await addButton.waitFor();
-    if (await addButton.isEnabled()) {
-      return productName;
-    }
-    await page.goto("/catalog");
-    await links.first().waitFor();
-  }
-
-  throw new Error("No in-stock product found to open");
-}
-
-async function addFirstProductToCart(page: Page): Promise<string> {
-  const productName = await openFirstInStockProduct(page);
-  await page.getByRole("button", { name: "Add to cart" }).click();
-  return productName;
 }
 
 test.describe("home page", () => {
@@ -192,13 +160,14 @@ test.describe("cart", () => {
       .click();
 
     await expect(page).toHaveURL(/\/cart$/);
+    const main = page.getByRole("main");
     await expect(
-      page.getByRole("heading", { name: "Your cart", exact: true }),
+      main.getByRole("heading", { name: "Your cart", exact: true }),
     ).toBeVisible();
-    await expect(page.getByText(productName, { exact: true })).toBeVisible();
-    await expect(page.getByText("Subtotal", { exact: true })).toBeVisible();
+    await expect(main.getByText(productName, { exact: true })).toBeVisible();
+    await expect(main.getByText("Subtotal", { exact: true })).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Checkout", exact: true }),
+      main.getByRole("link", { name: "Checkout", exact: true }),
     ).toBeVisible();
   });
 });
