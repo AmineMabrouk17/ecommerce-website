@@ -15,22 +15,22 @@ interface CartLineProps {
 
 export function CartLine({ line, onChangeQuantity, onRemove }: CartLineProps) {
   return (
-    <li className="flex gap-4">
-      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-muted">
+    <div className="group flex gap-4 border-b py-4 first:pt-0 last:border-b-0 last:pb-0">
+      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border bg-muted">
         {line.image ? (
           <Image
             src={line.image}
             alt={line.name}
             fill
             sizes="80px"
-            className="object-cover"
+            className="object-cover transition-transform duration-200 group-hover:scale-105"
           />
         ) : null}
       </div>
       <div className="flex flex-1 flex-col justify-between gap-2">
         <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="text-sm font-medium">{line.name}</p>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{line.name}</p>
             <p className="mt-0.5 text-sm text-muted-foreground">
               {formatPrice(line.price)} each
             </p>
@@ -39,7 +39,7 @@ export function CartLine({ line, onChangeQuantity, onRemove }: CartLineProps) {
             type="button"
             aria-label={`Remove ${line.name} from cart`}
             onClick={onRemove}
-            className="text-muted-foreground transition-colors hover:text-destructive"
+            className="shrink-0 rounded-md p-1 text-muted-foreground opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
           >
             <Trash2 className="size-4" aria-hidden />
           </button>
@@ -55,6 +55,6 @@ export function CartLine({ line, onChangeQuantity, onRemove }: CartLineProps) {
           </span>
         </div>
       </div>
-    </li>
+    </div>
   );
 }
