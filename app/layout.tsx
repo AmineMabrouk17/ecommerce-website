@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces } from "next/font/google";
-import localFont from "next/font/local";
+import { DM_Sans } from "next/font/google";
 import { Providers } from "@/app/providers";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { SiteFooter } from "@/components/site/footer";
@@ -8,19 +7,10 @@ import { SiteHeader } from "@/components/site/header";
 import { siteConfig } from "@/config/site";
 import "./globals.css";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
-const fraunces = Fraunces({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-display",
+  variable: "--font-dm-sans",
   display: "swap",
 });
 
@@ -40,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} antialiased`}
+        className={`${dmSans.variable} antialiased`}
       >
         <Providers>
           <SiteHeader />

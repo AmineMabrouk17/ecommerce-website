@@ -21,7 +21,7 @@ import { formatPrice } from "@/lib/money";
 const chartConfig = {
   revenueCents: {
     label: "Revenue",
-    color: "oklch(var(--chart-1))",
+    color: "var(--chart-1)",
   },
 } satisfies ChartConfig;
 

@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-  font-family: var(--font-geist-sans);
+  font-family: var(--font-dm-sans);
 }
 
 @layer utilities {
@@ -18,163 +18,163 @@ body {
 @layer base {
   :root {
     /* Background & Foreground */
-    --background: 0.977 0.01 81.8;
-    --foreground: 0.256 0.02 63.4;
+    --background: #F7F9FC;
+    --foreground: #1C274C;
 
     /* Card & Popover */
-    --card: 0.992 0.006 75.4;
-    --card-foreground: 0.256 0.02 63.4;
-    --popover: 0.992 0.006 75.4;
-    --popover-foreground: 0.256 0.02 63.4;
+    --card: #FFFFFF;
+    --card-foreground: #1C274C;
+    --popover: #FFFFFF;
+    --popover-foreground: #1C274C;
 
-    /* Primary (Sunset Coral - Lumina) */
-    --primary: 0.62 0.2 36.8;
-    --primary-foreground: 0.983 0.009 52.2;
+    /* Primary (CozyCommerce Blue) */
+    --primary: #3C50E0;
+    --primary-foreground: #FFFFFF;
 
     /* Secondary */
-    --secondary: 0.946 0.022 45.6;
-    --secondary-foreground: 0.256 0.02 63.4;
+    --secondary: #F3F5F6;
+    --secondary-foreground: #1C274C;
 
     /* Muted */
-    --muted: 0.946 0.022 45.6;
-    --muted-foreground: 0.55 0.025 55;
+    --muted: #F3F5F6;
+    --muted-foreground: #6C6F93;
 
     /* Accent */
-    --accent: 0.946 0.022 45.6;
-    --accent-foreground: 0.256 0.02 63.4;
+    --accent: #F3F5F6;
+    --accent-foreground: #1C274C;
 
     /* Status Colors */
-    --destructive: 0.577 0.245 27.325;
-    --destructive-foreground: 0.983 0.009 52.2;
-    --success: 0.641 0.161 150;
-    --success-foreground: 0.98 0.008 150;
-    --warning: 0.666 0.179 58.318;
-    --warning-foreground: 0.98 0.008 80;
+    --destructive: #F23030;
+    --destructive-foreground: #FFFFFF;
+    --success: #22AD5C;
+    --success-foreground: #FFFFFF;
+    --warning: #FBBF24;
+    --warning-foreground: #1C274C;
 
     /* Extended Palette */
-    --violet: 0.54 0.19 296;
-    --violet-foreground: 0.98 0.01 296;
-    --info: 0.545 0.19 262;
-    --info-foreground: 0.98 0.01 262;
-    --teal: 0.65 0.15 175;
-    --teal-foreground: 0.98 0.01 175;
-    --orange: 0.68 0.18 45;
-    --orange-foreground: 0.98 0.01 45;
+    --violet: #7C3AED;
+    --violet-foreground: #FFFFFF;
+    --info: #3B82F6;
+    --info-foreground: #FFFFFF;
+    --teal: #02AAA4;
+    --teal-foreground: #FFFFFF;
+    --orange: #F27430;
+    --orange-foreground: #FFFFFF;
 
-    /* Gray Scale (CozyCommerce-inspired) */
-    --gray-50: 0.985 0.002 240;
-    --gray-100: 0.97 0.003 240;
-    --gray-200: 0.94 0.005 240;
-    --gray-300: 0.89 0.008 240;
-    --gray-400: 0.82 0.012 240;
-    --gray-500: 0.65 0.015 240;
-    --gray-600: 0.50 0.018 240;
-    --gray-700: 0.35 0.02 240;
-    --gray-800: 0.25 0.022 240;
-    --gray-900: 0.15 0.025 240;
+    /* Gray Scale (CozyCommerce) */
+    --gray-50: #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+    --gray-800: #1F2937;
+    --gray-900: #111827;
 
     /* Border & Input */
-    --border: 0.92 0.018 73.1;
-    --input: 0.92 0.018 73.1;
-    --ring: 0.62 0.2 36.8;
-    --radius: 1rem;
+    --border: #E5E7EB;
+    --input: #E5E7EB;
+    --ring: #3C50E0;
+    --radius: 0.5rem;
 
     /* Charts */
-    --chart-1: 0.62 0.2 36.8;
-    --chart-2: 0.78 0.15 75;
-    --chart-3: 0.65 0.15 150;
-    --chart-4: 0.62 0.19 300;
-    --chart-5: 0.7 0.12 195;
+    --chart-1: #3C50E0;
+    --chart-2: #22AD5C;
+    --chart-3: #FBBF24;
+    --chart-4: #F23030;
+    --chart-5: #02AAA4;
 
     /* Sidebar */
-    --sidebar: 0.977 0.01 81.8;
-    --sidebar-foreground: 0.256 0.02 63.4;
-    --sidebar-primary: 0.62 0.2 36.8;
-    --sidebar-primary-foreground: 0.983 0.009 52.2;
-    --sidebar-accent: 0.946 0.022 45.6;
-    --sidebar-accent-foreground: 0.256 0.02 63.4;
-    --sidebar-border: 0.92 0.018 73.1;
-    --sidebar-ring: 0.72 0.12 40;
+    --sidebar: #F7F9FC;
+    --sidebar-foreground: #1C274C;
+    --sidebar-primary: #3C50E0;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #F3F5F6;
+    --sidebar-accent-foreground: #1C274C;
+    --sidebar-border: #E5E7EB;
+    --sidebar-ring: #3C50E0;
   }
 
   .dark {
     /* Background & Foreground */
-    --background: 0.202 0.013 55.6;
-    --foreground: 0.955 0.013 75.4;
+    --background: #0F172A;
+    --foreground: #F8FAFC;
 
     /* Card & Popover */
-    --card: 0.248 0.014 67.1;
-    --card-foreground: 0.955 0.013 75.4;
-    --popover: 0.248 0.014 67.1;
-    --popover-foreground: 0.955 0.013 75.4;
+    --card: #1E293B;
+    --card-foreground: #F8FAFC;
+    --popover: #1E293B;
+    --popover-foreground: #F8FAFC;
 
-    /* Primary (Sunset Coral - Lumina Dark) */
-    --primary: 0.728 0.171 36.5;
-    --primary-foreground: 0.202 0.013 55.6;
+    /* Primary (CozyCommerce Blue Dark) */
+    --primary: #5475E5;
+    --primary-foreground: #FFFFFF;
 
     /* Secondary */
-    --secondary: 0.292 0.019 63.6;
-    --secondary-foreground: 0.955 0.013 75.4;
+    --secondary: #334155;
+    --secondary-foreground: #F8FAFC;
 
     /* Muted */
-    --muted: 0.292 0.019 63.6;
-    --muted-foreground: 0.75 0.025 70;
+    --muted: #334155;
+    --muted-foreground: #94A3B8;
 
     /* Accent */
-    --accent: 0.292 0.019 63.6;
-    --accent-foreground: 0.955 0.013 75.4;
+    --accent: #334155;
+    --accent-foreground: #F8FAFC;
 
     /* Status Colors */
-    --destructive: 0.704 0.191 22.216;
-    --destructive-foreground: 0.955 0.013 75.4;
-    --success: 0.75 0.16 155;
-    --success-foreground: 0.202 0.02 155;
-    --warning: 0.78 0.14 80;
-    --warning-foreground: 0.202 0.02 80;
+    --destructive: #EF4444;
+    --destructive-foreground: #FFFFFF;
+    --success: #22C55E;
+    --success-foreground: #FFFFFF;
+    --warning: #F59E0B;
+    --warning-foreground: #FFFFFF;
 
     /* Extended Palette */
-    --violet: 0.7 0.15 300;
-    --violet-foreground: 0.202 0.02 300;
-    --info: 0.7 0.12 250;
-    --info-foreground: 0.202 0.02 250;
-    --teal: 0.72 0.14 175;
-    --teal-foreground: 0.202 0.02 175;
-    --orange: 0.75 0.16 45;
-    --orange-foreground: 0.202 0.02 45;
+    --violet: #8B5CF6;
+    --violet-foreground: #FFFFFF;
+    --info: #60A5FA;
+    --info-foreground: #FFFFFF;
+    --teal: #06A09B;
+    --teal-foreground: #FFFFFF;
+    --orange: #E1580E;
+    --orange-foreground: #FFFFFF;
 
-    /* Gray Scale (CozyCommerce-inspired Dark) */
-    --gray-50: 0.15 0.025 240;
-    --gray-100: 0.20 0.022 240;
-    --gray-200: 0.25 0.02 240;
-    --gray-300: 0.30 0.018 240;
-    --gray-400: 0.40 0.015 240;
-    --gray-500: 0.55 0.012 240;
-    --gray-600: 0.65 0.01 240;
-    --gray-700: 0.75 0.008 240;
-    --gray-800: 0.85 0.005 240;
-    --gray-900: 0.95 0.003 240;
+    /* Gray Scale (CozyCommerce Dark) */
+    --gray-50: #0F172A;
+    --gray-100: #1E293B;
+    --gray-200: #334155;
+    --gray-300: #475569;
+    --gray-400: #64748B;
+    --gray-500: #94A3B8;
+    --gray-600: #CBD5E1;
+    --gray-700: #E2E8F0;
+    --gray-800: #F1F5F9;
+    --gray-900: #F8FAFC;
 
     /* Border & Input */
-    --border: 0.321 0.018 60;
-    --input: 0.321 0.018 60;
-    --ring: 0.728 0.171 36.5;
+    --border: #334155;
+    --input: #334155;
+    --ring: #5475E5;
 
     /* Charts */
-    --chart-1: 0.728 0.171 36.5;
-    --chart-2: 0.82 0.13 80;
-    --chart-3: 0.75 0.16 155;
-    --chart-4: 0.72 0.16 300;
-    --chart-5: 0.75 0.12 195;
+    --chart-1: #5475E5;
+    --chart-2: #22C55E;
+    --chart-3: #F59E0B;
+    --chart-4: #EF4444;
+    --chart-5: #06A09B;
 
     /* Sidebar */
-    --sidebar: 0.248 0.014 67.1;
-    --sidebar-foreground: 0.955 0.013 75.4;
-    --sidebar-primary: 0.728 0.171 36.5;
-    --sidebar-primary-foreground: 0.202 0.013 55.6;
-    --sidebar-accent: 0.292 0.019 63.6;
-    --sidebar-accent-foreground: 0.955 0.013 75.4;
-    --sidebar-border: 0.321 0.018 60;
-    --sidebar-ring: 0.728 0.171 36.5;
+    --sidebar: #1E293B;
+    --sidebar-foreground: #F8FAFC;
+    --sidebar-primary: #5475E5;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #334155;
+    --sidebar-accent-foreground: #F8FAFC;
+    --sidebar-border: #334155;
+    --sidebar-ring: #5475E5;
   }
 }
 @layer base {
@@ -190,6 +190,6 @@ body {
   h4,
   h5,
   h6 {
-    font-family: var(--font-display);
+    font-family: var(--font-dm-sans);
   }
 }
