@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   title: "Dashboard",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboardPage() {
   const { kpis, lowStockProducts, dailyRevenue } = await getAdminDashboard();
 

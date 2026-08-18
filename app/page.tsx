@@ -15,6 +15,8 @@ import {
   getTrendingProducts,
 } from "@/lib/data-access";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   description: `Shop ${siteConfig.name} — apparel, footwear, accessories, home goods, and tech.`,
 };

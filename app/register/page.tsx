@@ -4,6 +4,8 @@ import { siteConfig } from "@/config/site";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { RegisterForm } from "@/components/auth/register-form";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Create an account",
   description: `Create a ${siteConfig.name} account to check out and track orders.`,

@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description: `Browse and search the full ${siteConfig.name} catalog.`,
 };
 
+export const dynamic = "force-dynamic";
+
 type CatalogSearchParams = {
   [key: string]: string | string[] | undefined;
 };

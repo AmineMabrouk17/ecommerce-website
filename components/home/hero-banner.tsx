@@ -6,7 +6,6 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowRight,
-  ChevronRight,
   Sparkles,
   Tag,
   Truck,
@@ -93,7 +92,7 @@ const slides: Slide[] = [
   },
 ];
 
-function slideVariants(direction: number): Variants {
+function slideVariants(): Variants {
   return {
     enter: (dir: number) => ({
       x: dir > 0 ? "8%" : "-8%",
@@ -161,7 +160,7 @@ export function HeroBanner() {
           <motion.div
             key={current}
             custom={direction}
-            variants={slideVariants(direction)}
+            variants={slideVariants()}
             initial="enter"
             animate="center"
             exit="exit"
@@ -224,7 +223,7 @@ export function HeroBanner() {
             <motion.div
               key={current}
               custom={direction}
-              variants={slideVariants(direction)}
+              variants={slideVariants()}
               initial="enter"
               animate="center"
               exit="exit"

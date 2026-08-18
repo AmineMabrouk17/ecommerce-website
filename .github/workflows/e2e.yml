@@ -3,7 +3,7 @@ name: E2E
 on:
   push:
     branches: [main]
-  pull_request:
+  # pull_request:             # disabled — too slow for PRs; runs on push to main only
 
 jobs:
   e2e:
