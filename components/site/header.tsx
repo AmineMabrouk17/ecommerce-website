@@ -1,10 +1,8 @@
 "use client";
 
 import {
-  Heart,
   Menu,
   Moon,
-  Search,
   ShoppingCart,
   Sun,
   User,
@@ -32,9 +30,6 @@ import { cn } from "@/lib/utils";
 const navLinks = [
   { href: "/catalog?sort=popular", label: "Popular" },
   { href: "/catalog", label: "Shop" },
-  { href: "/pages", label: "Pages" },
-  { href: "/blog", label: "Blog" },
-  { href: "/contact", label: "Contact" },
 ];
 
 function ThemeToggle({ className }: { className?: string }) {
@@ -240,15 +235,6 @@ export function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-0.5">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label="Search"
-              className="hidden sm:inline-flex"
-            >
-              <Search className="size-5" aria-hidden />
-            </Button>
             <Link href="/sign-in">
               <Button
                 type="button"
@@ -260,15 +246,6 @@ export function SiteHeader() {
                 <User className="size-5" aria-hidden />
               </Button>
             </Link>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label="Wishlist"
-              className="hidden sm:inline-flex relative"
-            >
-              <Heart className="size-5" aria-hidden />
-            </Button>
             <ThemeToggle className="hidden sm:inline-flex" />
             <CartButton />
           </div>
