@@ -14,6 +14,8 @@ import { isReviewableOrderStatus } from "@/lib/reviews";
 import { createClient } from "@/lib/supabase/server";
 
 export const TRENDING_LIMIT = 8;
+export const NEW_ARRIVALS_LIMIT = 8;
+export const BEST_SELLING_LIMIT = 8;
 const TRENDING_FETCH_LIMIT = 50;
 
 export interface HomeCategory {
@@ -445,6 +447,62 @@ export async function getTrendingProducts(
       createdAt: product.createdAt,
       unitsOrdered30d: product.unitsOrdered30d,
     }));
+}
+
+export async function getNewArrivals(
+  limit: number = NEW_ARRIVALS_LIMIT,
+): Promise<HomeProduct[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("id, name, slug, price, compare_at_price, images, created_at, stock, categories(name)")
+    .eq("is_published", true)
+    .order("created_at", { ascending: false })
+    .limit(TRENDING_FETCH_LIMIT);
+  if (error) throw error;
+
+  const products = (data ?? []) as ProductRow[];
+  const sales = await fetchUnitsOrdered30d();
+
+  return products
+    .slice(0, limit)
+    .map((row) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      price: row.price,
+      compareAtPrice: row.compare_at_price,
+      image: row.images?.[0] ?? null,
+      categoryName: row.categories?.[0]?.name ?? null,
+      stock: row.stock,
+      createdAt: row.created_at,
+      unitsOrdered30d: sales.get(row.id) ?? 0,
+    }));
+}
+
+export async function getBestSelling(
+  limit: number = BEST_SELLING_LIMIT,
+): Promise<HomeProduct[]> {
+  const [products, sales] = await Promise.all([
+    fetchLatestPublishedProducts(),
+    fetchUnitsOrdered30d(),
+  ]);
+
+  return products
+    .map((row) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      price: row.price,
+      compareAtPrice: row.compare_at_price,
+      image: row.images?.[0] ?? null,
+      categoryName: row.categories?.[0]?.name ?? null,
+      stock: row.stock,
+      createdAt: row.created_at,
+      unitsOrdered30d: sales.get(row.id) ?? 0,
+    }))
+    .sort((a, b) => b.unitsOrdered30d - a.unitsOrdered30d)
+    .slice(0, limit);
 }
 
 export interface CheckoutProfile {
