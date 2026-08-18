@@ -3,6 +3,7 @@ import { Fraunces } from "next/font/google";
 import localFont from "next/font/local";
 import { Providers } from "@/app/providers";
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
 import { siteConfig } from "@/config/site";
 import "./globals.css";
@@ -45,6 +46,7 @@ export default function RootLayout({
           <SiteHeader />
           {children}
           <CartDrawer />
+          <SiteFooter />
         </Providers>
       </body>
     </html>
